@@ -9,7 +9,7 @@ Button {
 
     property color bgrColor: "lightgrey"
     property color shadowColor: "black"
-    property color particleColor: "green"
+    property color borderColor: "darkgrey"
 
     state: pressed ? "buttonDown" : "buttonUp"
 
@@ -19,6 +19,8 @@ Button {
         width: root.width
         height: root.height
         color: root.bgrColor
+        border.color: root.borderColor
+        border.width: 2
         radius: 8
         visible: false // Source must be hidden so it renders only as an effect
     }
