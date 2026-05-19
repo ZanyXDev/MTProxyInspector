@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.Material
 import QtQuick.Layouts
 
 import io.github.zanyxdev.mtproxyinspector
@@ -26,11 +27,13 @@ ApplicationWindow {
     // Свойство-флаг для режима отладки
     property bool isDebugMode: false // Можно задать значение по умолчанию
 
+    property real  baseSpacing: 8
+    property real  padding: 16
+
     property FontLoader buiraFont: FontLoader {
         id: buiraFont
         source: "qrc:/qt/qml/assets/fonts/Buira/Buira.otf"
     }
-
     property FontLoader droidFont: FontLoader {
         id: droidFont
         source: "qrc:/qt/qml/assets/fonts/droidsansmono.ttf"
@@ -39,20 +42,37 @@ ApplicationWindow {
         id: digitalFont
         source: "qrc:/qt/qml/assets/fonts/681-font.otf"
     }
-
     property FontLoader baseFont: FontLoader {
         id: baseFont
         source: "qrc:/qt/qml/assets/fonts/nasalization-rg.otf"
     }
 
-    // === Глобальные стили (легко менять в одном месте) ===
-    property color textColorPrimary: "black"
-    property color textColorSecondary: "darkgrey"
-    property color buttonHelpBg: "lightgrey"
-    property color buttonBorder: "lightgrey"
-    property color bgrColor: "lightblue"
-    property real  baseSpacing: 8
-    property real  padding: 16
+    // -------------------- Глобальные стиль --------------------------------
+
+    // Solarized color palette
+    readonly property color solarizedBase03: "#002b36"
+    readonly property color solarizedBase02: "#073642"
+    readonly property color solarizedBase01: "#586e75"
+    readonly property color solarizedBase00: "#657b83"
+    readonly property color solarizedBase0: "#839496"
+    readonly property color solarizedBase1: "#93a1a1"
+    readonly property color solarizedBase2: "#eee8d5"
+    readonly property color solarizedBase3: "#fdf6e3"
+    readonly property color solarizedYellow: "#b58900"
+    readonly property color solarizedOrange: "#cb4b16"
+    readonly property color solarizedRed: "#dc322f"
+    readonly property color solarizedMagenta: "#d33682"
+    readonly property color solarizedViolet: "#6c71c4"
+    readonly property color solarizedBlue: "#268bd2"
+    readonly property color solarizedCyan: "#2aa198"
+    readonly property color solarizedGreen: "#859900"
+
+    // Theme selection
+    property bool darkMode: false
+
+    Material.theme: darkMode ? Material.Dark : Material.Light
+    Material.accent: solarizedCyan
+    Material.primary: solarizedBlue
 
     // ----- Signal declarations
 
@@ -69,14 +89,79 @@ ApplicationWindow {
     visibility: (isMobile) ? Window.FullScreen : Window.Windowed
     flags: Qt.Dialog
 
-    title: qsTr("Проверка MTProxy для Телеграм")
-
     // ----- Qt provided visual children
-    background: Rectangle {
-        id: background
-        anchors.fill: parent
-        color: bgrColor
+
+    header: ToolBar {
+        Material.background: darkMode ? solarizedBase03 : solarizedBase2
+        Material.foreground: darkMode ? solarizedBase2 : solarizedBase02
+        Material.elevation: 2
+        background:Rectangle {
+            anchors.fill: parent
+            anchors.margins:  appWnd.padding / 2
+            color: Material.backgroundColor
+            radius: 8
+            border.width: 0
+        }
+        RowLayout {
+            ToolButton {
+                text: "☰"
+                font{
+                    family: appWnd.droidFont.name
+                    pixelSize: 18
+                }
+                onClicked: drawer.open()
+            }
+            Label {
+                text: qsTr("MTProxy для Телеграм")
+                font{
+                    family: appWnd.droidFont.name
+                    pixelSize: 18
+                }
+                Layout.fillWidth: true
+            }
+        }
     }
+    Drawer {
+        id: drawer
+        width: (screenOrientation === Qt.PortraitOrientation) ? Math.min(appWnd.width * 0.7, 300) : Math.min(appWnd.width * 0.7, 600)
+        height: appWnd.height
+        interactive: true
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: appWnd.padding
+            spacing: appWnd.baseSpacing
+            RowLayout {
+                Layout.alignment: Qt.AlignLeft
+                Layout.fillWidth: true
+                Layout.preferredHeight: 86
+                spacing: appWnd.baseSpacing
+                Image {
+                    Layout.preferredWidth: 72
+                    Layout.preferredHeight: 72
+                    source: "qrc:/qt/qml/assets/images/ic_launcher-playstore.png"
+                    width: 72
+                    height: 72
+                    sourceSize.width: 72
+                    sourceSize.height: 72
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 72
+                    verticalAlignment: Text.AlignVCenter
+                    text: qsTr("Тестер MTProxy")
+                    font{
+                        family: appWnd.droidFont.name
+                        pixelSize: 18
+                    }
+                    color: darkMode ? solarizedBase2 : solarizedBase02
+                }
+            }
+        }
+    }
+
     ColumnLayout {
         id: mainColumnLayout
         anchors.fill: parent
@@ -95,14 +180,14 @@ ApplicationWindow {
                 pixelSize: 28
                 bold: true
             }
-            color: appWnd.textColorPrimary
+
             Layout.alignment: Qt.AlignHCenter
             Layout.bottomMargin: appWnd.padding
         }
         MButton {
             id: btnHelp
             text: qsTr("Справка")
-            bgrColor: "lightblue" //appWnd.textColorPrimary
+
             //borderColor:appWnd.textColorSecondary
 
             font{
@@ -137,7 +222,7 @@ ApplicationWindow {
                 }
                 Layout.fillWidth: true
                 Layout.preferredHeight: 60
-                bgrColor: "transparent"
+
 
                 onClicked: {
                     console.log(`btnEurope.clicked()`)
@@ -156,7 +241,7 @@ ApplicationWindow {
                 pixelSize: 12
                 bold: true
             }
-            color: appWnd.textColorPrimary
+
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignRight
             Layout.alignment: Qt.AlignRight
