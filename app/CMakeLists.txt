@@ -16,6 +16,9 @@ qt_add_resources(${APP_NAME} "fonts"
         "/qt/qml"
     FILES
     ../assets/fonts/Buira/Buira.otf
+    ../assets/fonts/681-font.otf
+    ../assets/fonts/droidsansmono.ttf
+    ../assets/fonts/nasalization-rg.otf
 )
 
 set(QML_FILES
