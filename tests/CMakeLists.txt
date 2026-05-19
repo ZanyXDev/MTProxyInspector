@@ -1,0 +1,2 @@
+add_subdirectory(auto/tst_boardgenerator)
+add_subdirectory(auto/tst_imagedatamanager)
