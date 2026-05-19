@@ -23,6 +23,7 @@ qt_add_resources(${APP_NAME} "fonts"
 
 set(QML_FILES
     qml/Main.qml
+    qml/MButton.qml
 )
 
 qt_add_qml_module(${APP_NAME}
