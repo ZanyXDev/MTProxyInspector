@@ -27,6 +27,10 @@ ApplicationWindow {
     // Свойство-флаг для режима отладки
     property bool isDebugMode: false // Можно задать значение по умолчанию
 
+    ///TODO add load/save in app Settings
+    // Theme selection
+    property bool darkMode: false
+
     property real  baseSpacing: 8
     property real  padding: 16
 
@@ -67,9 +71,6 @@ ApplicationWindow {
     readonly property color solarizedCyan: "#2aa198"
     readonly property color solarizedGreen: "#859900"
 
-    // Theme selection
-    property bool darkMode: false
-
     Material.theme: darkMode ? Material.Dark : Material.Light
     Material.accent: solarizedCyan
     Material.primary: solarizedBlue
@@ -91,8 +92,11 @@ ApplicationWindow {
 
     // ----- Qt provided visual children
 
+    Material.background: darkMode ? solarizedBase00 : solarizedBase0
+    Material.foreground: darkMode ? solarizedBase0 : solarizedBase00
+
     header: ToolBar {
-        Material.background: darkMode ? solarizedBase03 : solarizedBase2
+        Material.background: darkMode ? solarizedBase02 : solarizedBase2
         Material.foreground: darkMode ? solarizedBase2 : solarizedBase02
         Material.elevation: 2
         background:Rectangle {
@@ -103,194 +107,184 @@ ApplicationWindow {
             border.width: 0
         }
         RowLayout {
-            ToolButton {
-                text: "☰"
-                font{
-                    family: appWnd.droidFont.name
-                    pixelSize: 18
-                }
-                onClicked: drawer.open()
-            }
-            Label {
-                text: qsTr("MTProxy для Телеграм")
-                font{
-                    family: appWnd.droidFont.name
-                    pixelSize: 18
-                }
-                Layout.fillWidth: true
-            }
-        }
-    }
-    Drawer {
-        id: drawer
-        width: (screenOrientation === Qt.PortraitOrientation) ? Math.min(appWnd.width * 0.7, 300) : Math.min(appWnd.width * 0.7, 600)
-        height: appWnd.height
-        interactive: true
-        ColumnLayout {
             anchors.fill: parent
-            anchors.margins: appWnd.padding
-            spacing: 2
-            RowLayout {
+            Label {
+
                 Layout.alignment: Qt.AlignLeft
-                Layout.fillWidth: true
-                Layout.preferredHeight: 72
-                spacing: 2
-                Image {
-                    Layout.preferredWidth: 64
-                    Layout.preferredHeight: 64
-                    source: "qrc:/qt/qml/assets/images/ic_launcher-playstore.png"
-                    width: 64
-                    height: 64
-                    sourceSize.width: 64
-                    sourceSize.height: 64
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true
-                }
-
-                Label {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 64
-                    verticalAlignment: Text.AlignVCenter
-                    text: qsTr("Тестер MTProxy")
-                    font{
-                        family: appWnd.droidFont.name
-                        pixelSize: 18
-                    }
-                    color: darkMode ? solarizedBase2 : solarizedBase02
-                }
-            }
-            Rectangle {
-                Layout.preferredWidth: parent.width *0.9
-                Layout.preferredHeight: 1
-                Layout.alignment: Qt.AlignHCenter
-                color: darkMode ? solarizedBase01 : solarizedBase1
-            }
-            Switch{
-                id: themeSwitch
-                Layout.fillWidth: true
+                Layout.leftMargin: appWnd.padding
                 Layout.preferredHeight: 64
-                text: darkMode ? qsTr("Dark") : qsTr("Light")
-                checked: darkMode
-                onCheckedChanged: darkMode = checked
+                Layout.fillWidth: true
+                text: qsTr("Тестер MTProxy для Телеграм")
+                font{
+                    family: appWnd.droidFont.name
+                    pixelSize: 18
+                    bold:true
+                }
+
+                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignLeft
+            }
+            ToolButton {
+                // Иконка "три точки" (вертикальные)
+                icon.name: "edit-menu"
+                icon.source: "qrc:/qt/qml/assets/images/more_vert.png"
+
+                onClicked: optionsMenu.open()
+
+                Menu {
+                    Material.background: darkMode ? solarizedBase02 : solarizedBase2
+                    Material.foreground: darkMode ? solarizedBase2 : solarizedBase02
+
+                    id: optionsMenu
+                    y: parent.height
+
+                    MenuItem {
+                        icon.source: "qrc:/qt/qml/assets/images/settings.png"
+                        text: qsTr("Настройки")
+                        onTriggered: console.log("Настройки выбраны")
+                    }
+                    MenuItem {
+                        id:themeModeMenu
+                        icon.source: (appWnd.darkMode) ? "qrc:/qt/qml/assets/images/moon.png" : "qrc:/qt/qml/assets/images/sun.png"
+                        text:(appWnd.darkMode) ? qsTr("Ночной"): qsTr("Дневной")
+                        onTriggered: {
+                            appWnd.darkMode = ! appWnd.darkMode
+                            console.log(`Выбран режим:${themeModeMenu.text}`)
+                        }
+                    }
+                    MenuItem {
+                        icon.source: "qrc:/qt/qml/assets/images/question-mark.png"
+                        text: qsTr("Справка")
+                        onTriggered: console.log("Справка выбрано")
+                    }
+                    MenuSeparator{
+                    }
+                    MenuItem {
+                        icon.source: "qrc:/qt/qml/assets/images/about.png"
+                        //icon.color: "transparent" // Set to transparent to use original icon colors
+                        text: qsTr("О программе")
+                        onTriggered: console.log("О программе выбрано")
+                    }
+                }
             }
         }
+    }
 
-        Item{
+    ColumnLayout {
+        id: mainColumnLayout
+        anchors.fill: parent
+        spacing: 0
+    }
+
+
+    ColumnLayout {
+        id: mainColumnLayout2
+        anchors.fill: parent
+        spacing: 0
+        visible: false
+        // ─── ОТСТУП СВЕРХУ (48dp) ──────────────────────
+        Item {
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            Layout.preferredHeight: appWnd.padding * 3
         }
-    }
+        Text {
+            text: qsTr("Прокси для Телеграм")
+            font{
+                family: appWnd.buiraFont.name
+                pixelSize: 28
+                bold: true
+            }
 
-
-ColumnLayout {
-    id: mainColumnLayout
-    anchors.fill: parent
-    spacing: 0
-
-    // ─── ОТСТУП СВЕРХУ (48dp) ──────────────────────
-    Item {
-        Layout.fillWidth: true
-        Layout.preferredHeight: appWnd.padding * 3
-    }
-    Text {
-
-        text: qsTr("Прокси для Телеграм")
-        font{
-            family: appWnd.buiraFont.name
-            pixelSize: 28
-            bold: true
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: appWnd.padding
         }
-
-        Layout.alignment: Qt.AlignHCenter
-        Layout.bottomMargin: appWnd.padding
-    }
-    MButton {
-        id: btnHelp
-        text: qsTr("Справка")
-
-        //borderColor:appWnd.textColorSecondary
-
-        font{
-            family: appWnd.droidFont.name
-            pixelSize: 16
-        }
-
-        Layout.preferredHeight: 40
-        Layout.preferredWidth: 80
-        Layout.alignment: Qt.AlignHCenter
-        Layout.bottomMargin: appWnd.padding * 2
-
-        // Сигнал для обработки (подключить в C++ или JS)
-        onClicked: {
-            console.log(`btnHelp.clicked()`)
-        }
-    }
-    // ─── КНОПКИ РЕГИОНОВ (горизонтальный ряд) ─────
-    RowLayout {
-        Layout.fillWidth: true
-        Layout.bottomMargin: 24
-        spacing: 8
-
-        // 🇪🇺 Европа
         MButton {
-            id: btnEurope
-            text: "Европа"
+            id: btnHelp
+            text: qsTr("Справка")
+
+            //borderColor:appWnd.textColorSecondary
+
             font{
                 family: appWnd.droidFont.name
-                pixelSize: 18
-                bold:true
+                pixelSize: 16
             }
-            Layout.fillWidth: true
-            Layout.preferredHeight: 60
 
+            Layout.preferredHeight: 40
+            Layout.preferredWidth: 80
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: appWnd.padding * 2
 
+            // Сигнал для обработки (подключить в C++ или JS)
             onClicked: {
-                console.log(`btnEurope.clicked()`)
+                console.log(`btnHelp.clicked()`)
             }
         }
-    }
+        // ─── КНОПКИ РЕГИОНОВ (горизонтальный ряд) ─────
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.bottomMargin: 24
+            spacing: 8
 
-    Text {
-        id:appVerTxt
-        z: 1
-        opacity: 0
-        visible: false
-        text: qsTr("v. ")+ appWnd.appVersion
-        font{
-            family: appWnd.digitalFont.name
-            pixelSize: 12
-            bold: true
+            // 🇪🇺 Европа
+            MButton {
+                id: btnEurope
+                text: "Европа"
+                font{
+                    family: appWnd.droidFont.name
+                    pixelSize: 18
+                    bold:true
+                }
+                Layout.fillWidth: true
+                Layout.preferredHeight: 60
+
+
+                onClicked: {
+                    console.log(`btnEurope.clicked()`)
+                }
+            }
         }
 
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: Text.AlignRight
-        Layout.alignment: Qt.AlignRight
-        Layout.rightMargin: appWnd.padding
-    }
-}
+        Text {
+            id:appVerTxt
+            z: 1
+            opacity: 0
+            visible: false
+            text: qsTr("v. ")+ appWnd.appVersion
+            font{
+                family: appWnd.digitalFont.name
+                pixelSize: 12
+                bold: true
+            }
 
-Component.onCompleted: {
-    if  (appWnd.isDebugMode){
-        console.log(`[DEV.UI.Main] Info: ${buildQtVersion}`)
+            verticalAlignment: Text.AlignVCenter
+            horizontalAlignment: Text.AlignRight
+            Layout.alignment: Qt.AlignRight
+            Layout.rightMargin: appWnd.padding
+        }
     }
-    showAnimation.start()
-}
 
-//--------------------- non Visual items -------------------------------------
-SequentialAnimation {
-    id: showAnimation
-    PropertyAction {
-        targets: [appVerTxt]
-        property: "visible"
-        value: true
+    Component.onCompleted: {
+        if  (appWnd.isDebugMode){
+            console.log(`[DEV.UI.Main] Info: ${buildQtVersion}`)
+        }
+        showAnimation.start()
     }
-    NumberAnimation {
-        targets: [appVerTxt]
-        properties: "opacity"
-        from: 0
-        to: 0.8
-        duration: 2000
-        easing.type: Easing.Linear
+
+    //--------------------- non Visual items -------------------------------------
+    SequentialAnimation {
+        id: showAnimation
+        PropertyAction {
+            targets: [appVerTxt]
+            property: "visible"
+            value: true
+        }
+        NumberAnimation {
+            targets: [appVerTxt]
+            properties: "opacity"
+            from: 0
+            to: 0.8
+            duration: 2000
+            easing.type: Easing.Linear
+        }
     }
-}
 }
