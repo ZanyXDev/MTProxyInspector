@@ -1,15 +1,14 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
+import QtQuick.Controls.Material
 
 Button {
     id:root
     property bool effectsOn: false
     property real antimationTime: 200
 
-    property color bgrColor: "lightgrey"
-    property color shadowColor: "black"
-    property color borderColor: "darkgrey"
+
 
     state: pressed ? "buttonDown" : "buttonUp"
 
@@ -18,8 +17,7 @@ Button {
         id: buttonBackground
         width: root.width
         height: root.height
-        color: root.bgrColor
-        border.color: root.borderColor
+
         border.width: 2
         radius: 8
         visible: false // Source must be hidden so it renders only as an effect
@@ -32,7 +30,7 @@ Button {
         autoPaddingEnabled: true
 
         shadowEnabled: true
-        shadowColor: root.shadowColor
+        shadowColor: Material.accent
         shadowBlur: 1.0
         shadowHorizontalOffset: 2
         shadowVerticalOffset: 6
