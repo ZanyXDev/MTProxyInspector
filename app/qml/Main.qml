@@ -25,7 +25,8 @@ ApplicationWindow {
     // Свойство-флаг для мобильной платформы
     property bool isMobile: false // Можно задать значение по умолчанию
     // Свойство-флаг для режима отладки
-    property bool isDebugMode: false // Можно задать значение по умолчанию
+    property bool isDebugMode: false
+    property bool isEURegion: false
 
     ///TODO add load/save in app Settings
     // Theme selection
@@ -99,22 +100,38 @@ ApplicationWindow {
         Material.background: darkMode ? solarizedBase02 : solarizedBase2
         Material.foreground: darkMode ? solarizedBase2 : solarizedBase02
         Material.elevation: 2
+
         background:Rectangle {
-            anchors.fill: parent
-            anchors.margins:  appWnd.padding / 2
+            anchors{
+                fill: parent
+                topMargin: padding / 2
+                leftMargin: padding / 2
+                rightMargin: padding / 2
+            }
             color: Material.backgroundColor
             radius: 8
             border.width: 0
         }
         RowLayout {
-            anchors.fill: parent
-            Label {
-
-                Layout.alignment: Qt.AlignLeft
-                Layout.leftMargin: appWnd.padding
-                Layout.preferredHeight: 64
+            spacing: baseSpacing
+            anchors{
+                fill: parent
+                topMargin: padding / 2
+                leftMargin: padding / 2
+                rightMargin: padding / 2
+            }
+            Item{
+                id:spacer
                 Layout.fillWidth: true
-                text: qsTr("Тестер MTProxy для Телеграм")
+                Layout.fillHeight: true
+            }
+            Label {
+                Layout.alignment: Qt.AlignCenter
+
+                Layout.preferredHeight: 64
+                Layout.leftMargin: padding
+                Layout.fillWidth: true
+                text: qsTr("Тест MTProxy для Телеграм")
                 font{
                     family: appWnd.droidFont.name
                     pixelSize: 18
@@ -122,9 +139,11 @@ ApplicationWindow {
                 }
 
                 verticalAlignment: Text.AlignVCenter
-                horizontalAlignment: Text.AlignLeft
+                horizontalAlignment: Text.AlignHCenter
             }
             ToolButton {
+                Layout.alignment: Qt.AlignRight
+                Layout.preferredHeight: 64
                 // Иконка "три точки" (вертикальные)
                 icon.name: "edit-menu"
                 icon.source: "qrc:/qt/qml/assets/images/more_vert.png"
@@ -145,11 +164,11 @@ ApplicationWindow {
                     }
                     MenuItem {
                         id:themeModeMenu
-                        icon.source: (appWnd.darkMode) ? "qrc:/qt/qml/assets/images/moon.png" : "qrc:/qt/qml/assets/images/sun.png"
-                        text:(appWnd.darkMode) ? qsTr("Ночной"): qsTr("Дневной")
+                        icon.source: (appWnd.darkMode) ?  "qrc:/qt/qml/assets/images/sun.png" :"qrc:/qt/qml/assets/images/moon.png"
+                        text:(appWnd.darkMode) ? qsTr("Дневной") :qsTr("Ночной")
                         onTriggered: {
-                            appWnd.darkMode = ! appWnd.darkMode
                             console.log(`Выбран режим:${themeModeMenu.text}`)
+                            appWnd.darkMode = ! appWnd.darkMode
                         }
                     }
                     MenuItem {
@@ -172,96 +191,141 @@ ApplicationWindow {
 
     ColumnLayout {
         id: mainColumnLayout
-        anchors.fill: parent
-        spacing: 0
-    }
-
-
-    ColumnLayout {
-        id: mainColumnLayout2
-        anchors.fill: parent
-        spacing: 0
-        visible: false
-        // ─── ОТСТУП СВЕРХУ (48dp) ──────────────────────
-        Item {
+        anchors{
+            fill: parent
+            topMargin: padding / 2
+            leftMargin: padding   / 2
+            rightMargin: padding  / 2
+            bottomMargin: padding / 2
+        }
+        spacing: baseSpacing
+        Pane{
             Layout.fillWidth: true
-            Layout.preferredHeight: appWnd.padding * 3
-        }
-        Text {
-            text: qsTr("Прокси для Телеграм")
-            font{
-                family: appWnd.buiraFont.name
-                pixelSize: 28
-                bold: true
+            Layout.preferredHeight: 72
+
+            Material.background: darkMode ? solarizedBase02 : solarizedBase2
+            Material.foreground: darkMode ? solarizedBase2 : solarizedBase02
+            Material.elevation: 2
+            padding: 0
+            background: Rectangle {
+                color: Material.backgroundColor
+                radius: 8
+                border.width: 0
             }
-
-            Layout.alignment: Qt.AlignHCenter
-            Layout.bottomMargin: appWnd.padding
-        }
-        MButton {
-            id: btnHelp
-            text: qsTr("Справка")
-
-            //borderColor:appWnd.textColorSecondary
-
-            font{
-                family: appWnd.droidFont.name
-                pixelSize: 16
-            }
-
-            Layout.preferredHeight: 40
-            Layout.preferredWidth: 80
-            Layout.alignment: Qt.AlignHCenter
-            Layout.bottomMargin: appWnd.padding * 2
-
-            // Сигнал для обработки (подключить в C++ или JS)
-            onClicked: {
-                console.log(`btnHelp.clicked()`)
-            }
-        }
-        // ─── КНОПКИ РЕГИОНОВ (горизонтальный ряд) ─────
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.bottomMargin: 24
-            spacing: 8
-
-            // 🇪🇺 Европа
-            MButton {
-                id: btnEurope
-                text: "Европа"
-                font{
-                    family: appWnd.droidFont.name
-                    pixelSize: 18
-                    bold:true
+            RowLayout {
+                anchors.fill: parent
+                spacing: baseSpacing
+                Image{
+                    Layout.alignment: Qt.AlignCenter
+                    Layout.preferredWidth: 64
+                    Layout.preferredHeight: 48
+                    Layout.leftMargin: baseSpacing
+                    width: 64
+                    height: 48
+                    source:(isEURegion) ? "qrc:/qt/qml/assets/images/flags/eu.svg": "qrc:/qt/qml/assets/images/flags/ru.svg"
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
                 }
-                Layout.fillWidth: true
-                Layout.preferredHeight: 60
+                Label {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredHeight: 48
+                    Layout.fillWidth: true
+                    text: (isEURegion) ? qsTr("MTProxy регион [EU]"): qsTr("MTProxy регион [RU]")
+                    font{
+                        family: appWnd.droidFont.name
+                        pixelSize: 16
+                        bold:true
+                    }
 
-
-                onClicked: {
-                    console.log(`btnEurope.clicked()`)
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignLeft
+                }
+                Switch{
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.fillWidth: true
+                    checked: isEURegion
+                    onCheckedChanged: isEURegion = checked
                 }
             }
         }
+        Pane{
+            id:paneListView
+            Layout.fillWidth: true
+            Layout.fillHeight: true
 
-        Text {
-            id:appVerTxt
-            z: 1
-            opacity: 0
-            visible: false
-            text: qsTr("v. ")+ appWnd.appVersion
-            font{
-                family: appWnd.digitalFont.name
-                pixelSize: 12
-                bold: true
+            Material.background: darkMode ? solarizedBase02 : solarizedBase2
+            Material.foreground: darkMode ? solarizedBase2 : solarizedBase02
+            Material.elevation: 2
+            padding: 0
+            background: Rectangle {
+                color: Material.backgroundColor
+                radius: 8
+                border.width: 0
             }
+            ColumnLayout{
+                id:mainPaneColumnLayout
+                anchors.fill: parent
+                spacing: baseSpacing
 
-            verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.AlignRight
-            Layout.alignment: Qt.AlignRight
-            Layout.rightMargin: appWnd.padding
+                ListView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    model: ListModel {
+                        ListElement { title: "Bluetooth"; subtitle: "On" }
+                        ListElement { title: "Wi-Fi"; subtitle: "Connected" }
+                        ListElement { title: "Battery"; subtitle: "85%" }
+                    }
+
+                    // Use ItemDelegate for built-in Material behavior
+                    delegate: ItemDelegate {
+                        width: parent.width
+                        text: model.title
+
+                        // Optional: Adding a subtitle for a detailed list item
+                        contentItem: Column {
+                            spacing: 2
+                            Text {
+                                text: model.title
+                                font: parent.parent.font
+                                color: Material.foreground
+                            }
+                            Text {
+                                text: model.subtitle
+                                font.pixelSize: 12
+                                color: "gray"
+                            }
+                        }
+
+                        onClicked: console.log("Clicked:", model.title)
+                    }
+
+                    ScrollIndicator.vertical: ScrollIndicator { }
+                }
+                Text {
+                    id:appVerTxt
+                    z: 1
+                    Layout.alignment: Qt.AlignRight | Qt.AlignBottom
+
+                    opacity: 0
+                    visible: false
+                    text: qsTr("v.")+ appWnd.appVersion + " "
+                    font{
+                        family: appWnd.digitalFont.name
+                        pixelSize: 12
+                        bold: true
+                    }
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignHCenter
+                }
+                Item{
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: padding / 2
+                }
+            }
         }
     }
+
 
     Component.onCompleted: {
         if  (appWnd.isDebugMode){
@@ -273,6 +337,10 @@ ApplicationWindow {
     //--------------------- non Visual items -------------------------------------
     SequentialAnimation {
         id: showAnimation
+
+        PauseAnimation {
+            duration: 1000
+        }
         PropertyAction {
             targets: [appVerTxt]
             property: "visible"
@@ -286,5 +354,22 @@ ApplicationWindow {
             duration: 2000
             easing.type: Easing.Linear
         }
+        PauseAnimation {
+            duration: 1000
+        }
+        NumberAnimation {
+            targets: [appVerTxt]
+            properties: "opacity"
+            from: 0.8
+            to: 0
+            duration: 2000
+            easing.type: Easing.Linear
+        }
+        PropertyAction {
+            targets: [appVerTxt]
+            property: "visible"
+            value: false
+        }
+
     }
 }
