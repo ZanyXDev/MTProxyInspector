@@ -33,8 +33,8 @@ qt_add_resources(${APP_NAME} "images"
     ../assets/images/question-mark@2x.png
     ../assets/images/question-mark@3x.png
     ../assets/images/question-mark@4x.png
-    ../assets/images/european-flag.png
-    ../assets/images/russia-flag.png
+    ../assets/images/flags/eu.svg
+    ../assets/images/flags/ru.svg
 )
 
 qt_add_resources(${APP_NAME} "fonts"
