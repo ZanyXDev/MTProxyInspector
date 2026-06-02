@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
 #ifdef Q_OS_ANDROID
-    QNativeInterface::QAndroidApplication::hideSplashScreen(333);
+    QNativeInterface::QAndroidApplication::hideSplashScreen(0);
 #endif
 
     QQmlApplicationEngine engine;
