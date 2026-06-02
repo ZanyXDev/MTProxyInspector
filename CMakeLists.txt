@@ -1,11 +1,58 @@
 cmake_minimum_required(VERSION 3.20)
 
 set (APP_NAME "MTProxyInspector")
-set (APP_VERSION 0.1.3)
-set (APP_VERSION_CODE "013")
+set (APP_NAME_ANDROID "MTProxy Inspector")
 set (APP_PACKAGE_NAME "io.github.zanyxdev.mtproxyinspector")
 
-project(${APP_NAME} LANGUAGES CXX)
+# --- 1. Получаем версию из Git тега ---
+execute_process(
+    COMMAND git describe --tags --abbrev=0
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_TAG
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+    RESULT_VARIABLE GIT_RESULT
+)
+
+if(GIT_RESULT EQUAL 0 AND GIT_TAG)
+    # Убираем префикс 'v' или 'V', если он есть (например, v0.1.3 -> 0.1.3)
+    string(REGEX REPLACE "^[vV]" "" APP_VERSION "${GIT_TAG}")
+    message(STATUS "✓ App version from Git tag: ${APP_VERSION}")
+else()
+    # Fallback: если тегов нет (или git недоступен), читаем из файла
+    if(EXISTS "${CMAKE_SOURCE_DIR}/version.txt")
+        file(READ "${CMAKE_SOURCE_DIR}/version.txt" APP_VERSION_RAW)
+        string(STRIP "${APP_VERSION_RAW}" APP_VERSION)
+        message(STATUS "✓ App version from version.txt: ${APP_VERSION}")
+    else()
+        set(APP_VERSION "0.0.1")
+        message(WARNING "⚠ Could not get version from Git or version.txt. Using default: ${APP_VERSION}")
+    endif()
+endif()
+
+# --- 2. Автоматический расчет APP_VERSION_CODE для Android ---
+# Android требует целое число для versionCode.
+# Алгоритм: Major * 10000 + Minor * 100 + Patch (например, 0.1.3 -> 103)
+string(REPLACE "." ";" VERSION_LIST ${APP_VERSION})
+list(LENGTH VERSION_LIST VERSION_LIST_LENGTH)
+
+if(VERSION_LIST_LENGTH GREATER_EQUAL 3)
+    list(GET VERSION_LIST 0 VER_MAJOR)
+    list(GET VERSION_LIST 1 VER_MINOR)
+    list(GET VERSION_LIST 2 VER_PATCH)
+
+    # Очищаем от возможных суффиксов (например, если тег был 0.1.3-beta, patch станет "3-beta")
+    string(REGEX MATCH "^[0-9]+" VER_MAJOR "${VER_MAJOR}")
+    string(REGEX MATCH "^[0-9]+" VER_MINOR "${VER_MINOR}")
+    string(REGEX MATCH "^[0-9]+" VER_PATCH "${VER_PATCH}")
+
+    math(EXPR APP_VERSION_CODE "${VER_MAJOR} * 10000 + ${VER_MINOR} * 100 + ${VER_PATCH}")
+else()
+    set(APP_VERSION_CODE "1")
+endif()
+message(STATUS "✓ App version code: ${APP_VERSION_CODE}")
+
+project(${APP_NAME} VERSION ${APP_VERSION} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
