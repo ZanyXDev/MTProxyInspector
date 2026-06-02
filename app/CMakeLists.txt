@@ -92,15 +92,15 @@ if(ANDROID)
         #QT_ANDROID_ABIS "armeabi-v7a;arm64-v8a;x86;x86_64"
         #QT_ANDROID_BUILD_ALL_ABIS ON
         QT_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android/"
-        QT_ANDROID_PACKAGE_NAME ${PACKAGE_NAME}
-        QT_ANDROID_APP_NAME "MTProxy Inspector"
+        QT_ANDROID_PACKAGE_NAME ${APP_PACKAGE_NAME}
+        QT_ANDROID_APP_NAME ${APP_NAME}
         QT_ANDROID_APP_ICON "@mipmap/ic_launcher"
-        #QT_ANDROID_APP_ICON "@drawable/icon"
         QT_ANDROID_TARGET_SDK_VERSION 36
+
         # Minimal version Android 8.0
         QT_ANDROID_MIN_SDK_VERSION 26
-        QT_ANDROID_VERSION_NAME "0.1.3"
-        QT_ANDROID_VERSION_CODE 013
+        QT_ANDROID_VERSION_NAME ${APP_VERSION}
+        QT_ANDROID_VERSION_CODE ${APP_VERSION_CODE}
     )
 
     qt_add_android_permission(${APP_NAME}
