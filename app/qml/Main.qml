@@ -386,21 +386,23 @@ ApplicationWindow {
                     clip:true
                 }
 
-                Label {
-                    id:labelURL
+                Button {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.preferredHeight: 48
                     Layout.fillWidth: true
-                    text: parent.text
                     font{
                         family: appWnd.droidFont.name
                         pixelSize: 16
                         bold:true
                     }
-
-                    verticalAlignment: Text.AlignVCenter
-                    horizontalAlignment: Text.AlignLeft
+                    text: "cloud.mtproxy.pw"
+                    onClicked: {
+                        // Opens the URL in the system's default web browser
+                        Qt.openUrlExternally("tg://proxy?server=cloud.mtproxy.pw&port=443&secret=ee3f8a91c2d7e04b6a9f12c5e8370bd4aa786170692e6f7a6f6e2e7275")
+                    }
                 }
+
+
                 ToolButton {
                     Layout.alignment: Qt.AlignRight | Qt.AlignHCenter
                     Layout.preferredHeight: 48
