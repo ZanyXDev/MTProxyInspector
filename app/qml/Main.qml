@@ -105,9 +105,6 @@ ApplicationWindow {
     visibility: (isMobile) ? Window.FullScreen : Window.Windowed
     flags: Qt.Dialog
 
-
-
-
     // ----- Qt provided visual children
 
     header: ToolBar {
@@ -493,7 +490,7 @@ ApplicationWindow {
             console.log("Proxy URL list изменился:", Core.proxyUrlList)
         }
 
-        function onLoadingStatusChanged(success, message, errorType) {
+        function onCurrentStatusChanged(success, message, errorType) {
             console.log("Статус загрузки:", success)
             console.log("Сообщение:", message)
             console.log("Тип ошибки:", errorType)

@@ -85,6 +85,7 @@ target_link_libraries(${APP_NAME}
         Qt6::Gui
         Qt6::Qml
         Qt6::Quick          # <-- обязательно, если есть #include <QQuickWindow>
+         Qt6::Network
 )
 
 if(ANDROID)
@@ -105,13 +106,14 @@ if(ANDROID)
 
     qt_add_android_permission(${APP_NAME}
         NAME android.permission.BLUETOOTH_SCAN
+        NAME android.permission.ACCESS_NETWORK_STATE
+        NAME android.permission.INTERNET
+        NAME android.permission.ACCESS_COARSE_LOCATION
         ATTRIBUTES
             minSdkVersion 31
             usesPermissionFlags neverForLocation
     )
-    qt_add_android_permission(${APP_NAME}
-        NAME android.permission.ACCESS_COARSE_LOCATION
-    )
+
 # ----------------------------------------------------------------------------
 message(STATUS "[ANDROID] QT_ANDROID_PACKAGE_SOURCE_DIR = ${QT_ANDROID_PACKAGE_SOURCE_DIR}")
 message(STATUS "[ANDROID] QT_ANDROID_PACKAGE_NAME       = ${QT_ANDROID_PACKAGE_NAME}")

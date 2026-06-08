@@ -11,6 +11,8 @@
 #include <QQuickWindow>
 #endif
 
+#include <QNetworkInformation>
+
 /**
   * @brief  
   * Дорогой программист: 
@@ -45,8 +47,8 @@ static void scanDirectoryPaths(const QString& path, QStringList& paths) {
 int main(int argc, char *argv[])
 {
     QCoreApplication::setOrganizationName(PACKAGE_NAME_STR);
-    QCoreApplication::setApplicationName(ACTIVITY_NAME_STR);
-    QCoreApplication::setApplicationVersion(VERSION_STR);
+    QCoreApplication::setApplicationName(ACTIVITY_NAME_STR);    QCoreApplication::setApplicationVersion(VERSION_STR);
+    QGuiApplication app(argc, argv);
 
 #ifdef QT_DEBUG
     qputenv("QT_LOGGING_RULES",
@@ -57,10 +59,15 @@ int main(int argc, char *argv[])
 // "qt.scenegraph.time.renderloop=true;");
 #endif
 
-    QGuiApplication app(argc, argv);
-
-#ifdef Q_OS_ANDROID
+#if defined(Q_OS_ANDROID)
+    bool backendLoaded = QNetworkInformation::loadDefaultBackend();
     QNativeInterface::QAndroidApplication::hideSplashScreen(0);
+#else
+    // Только для отладки на Linux
+    bool backendLoaded = QNetworkInformation::loadBackendByName(QStringLiteral("glib"));
+    if (!backendLoaded) {
+        backendLoaded = QNetworkInformation::loadDefaultBackend();
+    }
 #endif
 
     QQmlApplicationEngine engine;
@@ -68,13 +75,11 @@ int main(int argc, char *argv[])
     //  КРИТИЧНО: Добавляем пути поиска модулей для разработки
     //  Стандартные пути установки Qt
     engine.addImportPath(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
+
 #ifdef QT_DEBUG
     QStringList paths;
     scanDirectoryPaths("://qt/qml", paths);
-    qDebug() << "[DEV.Main] All resources:" << paths;
-#endif
-
-#ifdef QT_DEBUG
+    // qDebug() << "[DEV.Main] All resources:" << paths;
 #ifdef QML_DEV_IMPORT_PATH
     // Путь к модулям в build-директории (для локальной разработки)
     // Используем applicationDirPath() — где лежит исполняемый файл
