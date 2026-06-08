@@ -5,7 +5,7 @@ import QtQuick.Layouts
 
 import io.github.zanyxdev.mtproxyinspector
 import io.github.zanyxdev.mtproxyinspector.core
-
+import io.github.zanyxdev.mtproxyinspector.androidutils
 
 ApplicationWindow {
     id: appWnd
@@ -185,7 +185,10 @@ ApplicationWindow {
                     MenuItem {
                         icon.source: "qrc:/qt/qml/assets/images/question-mark.png"
                         text: qsTr("Справка")
-                        onTriggered: console.log("Справка выбрано")
+                        onTriggered: {
+                            console.log("Справка выбрано")
+                            AndroidUtils.showToast("Подключение установлено успешно!", false)
+                        }
                     }
                     MenuSeparator{
                     }
