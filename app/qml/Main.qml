@@ -13,7 +13,7 @@ ApplicationWindow {
     // ----- Property Declarations
     // Required properties should be at the top.
     readonly property int screenOrientation: Qt.PortraitOrientation
-
+    property bool isConnected: false
     property var screenWidth: Screen.width
     property var screenHeight: Screen.height
     property var screenAvailableWidth: Screen.desktopAvailableWidth
@@ -108,6 +108,7 @@ ApplicationWindow {
     // ----- Qt provided visual children
 
     header: ToolBar {
+
         Material.theme: appWnd.Material.theme
         Material.background: darkMode ? solarizedBase02 : solarizedBase2
         Material.foreground: darkMode ? solarizedBase0 : solarizedBase00
@@ -116,21 +117,13 @@ ApplicationWindow {
         background:Rectangle {
             anchors{
                 fill: parent
-                topMargin: padding / 2
-                leftMargin: padding / 2
-                rightMargin: padding / 2
             }
             color: Material.backgroundColor
-            radius: 8
-            border.width: 0
         }
         RowLayout {
             spacing: baseSpacing
             anchors{
                 fill: parent
-                topMargin: padding / 2
-                leftMargin: padding / 2
-                rightMargin: padding / 2
             }
             Item{
                 id:spacer
@@ -138,24 +131,23 @@ ApplicationWindow {
                 Layout.fillHeight: true
             }
             Label {
-                Layout.alignment: Qt.AlignCenter
-
-                Layout.preferredHeight: 64
+                id:titleLabel
+                Layout.alignment: Qt.AlignVCenter  // Вертикальное центрирование
+                Layout.fillHeight: true            // Заполнить высоту родителя
+                Layout.fillWidth: false
                 Layout.leftMargin: padding
-                Layout.fillWidth: true
+
                 text: qsTr("Тест MTProxy для Телеграм")
                 font{
                     family: appWnd.droidFont.name
                     pixelSize: 18
                     bold:true
                 }
-
                 verticalAlignment: Text.AlignVCenter
                 horizontalAlignment: Text.AlignHCenter
             }
             ToolButton {
-                Layout.alignment: Qt.AlignRight
-                Layout.preferredHeight: 64
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                 // Иконка "три точки" (вертикальные)
                 icon.name: "edit-menu"
                 icon.source: "qrc:/qt/qml/assets/images/more_vert.png"
@@ -187,7 +179,6 @@ ApplicationWindow {
                         text: qsTr("Справка")
                         onTriggered: {
                             console.log("Справка выбрано")
-                            AndroidUtils.showToast("Подключение установлено успешно!", false)
                         }
                     }
                     MenuSeparator{
@@ -217,20 +208,19 @@ ApplicationWindow {
         id: mainColumnLayout
         anchors{
             fill: parent
-            topMargin: padding / 2
-            leftMargin: padding   / 2
-            rightMargin: padding  / 2
-            bottomMargin: padding / 2
+            margins: padding / 4
         }
+
         spacing: baseSpacing
         Pane{
             Layout.fillWidth: true
             Layout.preferredHeight: 72
-            padding: 0
+
             background: Rectangle {
                 color: Material.backgroundColor
                 radius: 8
-                border.width: 0
+                border.width: 1
+                border.color: Material.frameColor
             }
             RowLayout {
                 anchors.fill: parent
@@ -280,11 +270,11 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            padding: 0
             background: Rectangle {
                 color: Material.backgroundColor
                 radius: 8
-                border.width: 0
+                border.width: 1
+                border.color: Material.frameColor
             }
             ColumnLayout{
                 id:mainPaneColumnLayout
@@ -365,12 +355,12 @@ ApplicationWindow {
         }
         Pane{
             Layout.fillWidth: true
-            Layout.preferredHeight: 72
-            padding: 0
+            Layout.preferredHeight: 64
             background: Rectangle {
                 color: Material.backgroundColor
                 radius: 8
-                border.width: 0
+                border.width: 1
+                border.color: Material.frameColor
             }
             RowLayout {
                 anchors.fill: parent
@@ -435,6 +425,7 @@ ApplicationWindow {
     Component.onCompleted: {
         if  (appWnd.isDebugMode){
             console.log(`[DEV.UI.Main] Info: ${buildQtVersion}`)
+            AndroidUtils.showToast("test message", false)
         }
         showAnimation.start()
     }
@@ -456,28 +447,28 @@ ApplicationWindow {
             properties: "opacity"
             from: 0
             to: 0.8
-            duration: 2000
+            duration: 1500
             easing.type: Easing.Linear
         }
-        // PauseAnimation {
-        //     duration: 1000
-        // }
-        // NumberAnimation {
-        //     targets: [appVerTxt]
-        //     properties: "opacity"
-        //     from: 0.8
-        //     to: 0
-        //     duration: 2000
-        //     easing.type: Easing.Linear
-        // }
-        // PropertyAction {
-        //     targets: [appVerTxt]
-        //     property: "visible"
-        //     value: false
-        // }
+        PauseAnimation {
+            duration: 1000
+        }
+        NumberAnimation {
+            targets: [appVerTxt]
+            properties: "opacity"
+            from: 0.8
+            to: 0
+            duration: 1500
+            easing.type: Easing.Linear
+        }
+        PropertyAction {
+            targets: [appVerTxt]
+            property: "visible"
+            value: false
+        }
 
     }
-  /**
+    /**
    * @brief Ключевые моменты для Qt6:
    * Аспект         Описание
    * QML_SINGLETON	Позволяет обращаться к классу как Core напрямую в QML
@@ -489,19 +480,17 @@ ApplicationWindow {
     Connections {
         target: Core
 
+        function onConnectStatusChanged(success, message){
+            console.log("Статус подключения:", success)
+            console.log("Сообщение:", message)
+            isConnected = success
+            AndroidUtils.showToast(message, false)
+        }
+
         function onProxyUrlListChanged() {
             console.log("Proxy URL list изменился:", Core.proxyUrlList)
+            AndroidUtils.showToast(qsTr("Proxy URL list изменился!"), false)
         }
 
-        function onCurrentStatusChanged(success, message, errorType) {
-            console.log("Статус загрузки:", success)
-            console.log("Сообщение:", message)
-            console.log("Тип ошибки:", errorType)
-
-            if (!success) {
-                // Показать ошибку пользователю
-                console.error("Ошибка загрузки прокси:", errorType)
-            }
-        }
     }
 }
