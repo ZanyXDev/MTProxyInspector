@@ -3,6 +3,9 @@
 #include <QString>
 #include <QtQml>
 
+/// TODO Модуль должен загружаться только в режиме мобильного приложения
+/// Вопрос как проверить в в qml части что модульне загружен?
+/// Необходимо внести изменения в корневой CMakeLists.txt
 class AndroidUtils : public QObject {
     Q_OBJECT
     QML_ELEMENT
