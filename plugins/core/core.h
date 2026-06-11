@@ -13,7 +13,7 @@ class Core : public QObject {
     QML_SINGLETON
     Q_PROPERTY(QStandardItemModel* boardModel READ boardModel CONSTANT)    
     Q_PROPERTY(QString proxyUrlList READ proxyUrlList WRITE setProxyUrlList NOTIFY proxyUrlListChanged FINAL)
-
+    Q_PROPERTY(bool onlineState READ onlineState NOTIFY onlineStateChanged FINAL)
 public:
     explicit Core(QObject *parent = nullptr);
     QStandardItemModel *boardModel() const;        
@@ -21,14 +21,18 @@ public:
 
     QString proxyUrlList() const;
 
-signals:
-    void proxyUrlListChanged();    
-    void currentStatusChanged(bool success, const QString &message, const QString &errorType = QString());
+    bool onlineState() const;
 
+signals:
+    void proxyUrlListChanged();
+    void showToastMessage(const QString &message  = QString());    
+    void onlineStateChanged();
 private slots:
     void onReplyFinished(QNetworkReply *reply);
 
 private:
+    QString convertToTlgFormat(const QString &urlString) const;
+
     void fetchProxyList(const QString &url);
     QStandardItemModel *m_boardModel = nullptr;
 
@@ -39,4 +43,6 @@ private:
 
     QString m_proxyUrlList;
     QStringList m_proxyList;
+
+    bool m_onlineState;
 };

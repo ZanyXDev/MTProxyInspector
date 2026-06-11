@@ -13,6 +13,7 @@ ApplicationWindow {
     // ----- Property Declarations
     // Required properties should be at the top.
     readonly property int screenOrientation: Qt.PortraitOrientation
+    property bool isConnected: Core.onlineState
     property var screenWidth: Screen.width
     property var screenHeight: Screen.height
     property var screenAvailableWidth: Screen.desktopAvailableWidth
@@ -21,15 +22,16 @@ ApplicationWindow {
     // Свойство для версии приложения
     property string appVersion
     property string buildQtVersion
+
     // Свойство-флаг для мобильной платформы
-    property bool isMobile: false // Можно задать значение по умолчанию
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     // Свойство-флаг для режима отладки
     property bool isDebugMode: false
-    property bool isEURegion: false
+
 
     ///TODO add load/save in app Settings
     // Theme selection
-    property bool darkMode: false
+    property bool darkMode: true
     property real  baseSpacing: 8
     property real  padding: 16
     property real  m_radius: 12
