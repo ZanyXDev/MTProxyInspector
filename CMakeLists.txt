@@ -119,7 +119,7 @@ endif()
 
 # ----------------------------------------------------------------------------
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick ShaderTools)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick ShaderTools Network)
 qt_standard_project_setup(REQUIRES 6.10)
 
 add_subdirectory(app)

@@ -5,6 +5,8 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 
+class ITester;
+
 class Core : public QObject {
     Q_OBJECT
     QML_ELEMENT
@@ -20,19 +22,21 @@ public:
     QString proxyUrlList() const;
 
 signals:
-    void proxyUrlListChanged();
-    void loadingStatusChanged(bool success, const QString &message, const QString &errorType = QString());
+    void proxyUrlListChanged();    
+    void currentStatusChanged(bool success, const QString &message, const QString &errorType = QString());
 
 private slots:
     void onReplyFinished(QNetworkReply *reply);
 
 private:
     void fetchProxyList(const QString &url);
+    QStandardItemModel *m_boardModel = nullptr;
+
+    QNetworkAccessManager *m_networkManager;
+    QNetworkReply *m_currentReply = nullptr;
+
+    ITester *m_itester = nullptr;
 
     QString m_proxyUrlList;
     QStringList m_proxyList;
-    QNetworkAccessManager *m_networkManager;
-    QNetworkReply *m_currentReply;
-
-    QStandardItemModel *m_boardModel = nullptr;
 };

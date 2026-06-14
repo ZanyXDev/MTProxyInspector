@@ -9,6 +9,7 @@ qt_add_qml_module(CorePlugin
     VERSION 1.0
     SOURCES
         core.cpp core.h
+        itester.cpp itester.h
 )
 
 target_link_libraries(CorePlugin PRIVATE Qt6::Gui)
