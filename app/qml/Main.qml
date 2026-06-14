@@ -88,6 +88,7 @@ ApplicationWindow {
             Layout.preferredHeight: appWnd.padding * 3
         }
         Text {
+
             text: qsTr("Прокси для Телеграм")
             font{
                 family: appWnd.buiraFont.name
@@ -119,8 +120,36 @@ ApplicationWindow {
                 console.log(`btnHelp.clicked()`)
             }
         }
+        // ─── КНОПКИ РЕГИОНОВ (горизонтальный ряд) ─────
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.bottomMargin: 24
+            spacing: 8
+
+            // 🇪🇺 Европа
+            MButton {
+                id: btnEurope
+                text: "Европа"
+                font{
+                    family: appWnd.droidFont.name
+                    pixelSize: 18
+                    bold:true
+                }
+                Layout.fillWidth: true
+                Layout.preferredHeight: 60
+                bgrColor: "transparent"
+
+                onClicked: {
+                    console.log(`btnEurope.clicked()`)
+                }
+            }
+        }
+
         Text {
-            id:appVersionTxt
+            id:appVerTxt
+            z: 1
+            opacity: 0
+            visible: false
             text: qsTr("v. ")+ appWnd.appVersion
             font{
                 family: appWnd.digitalFont.name
@@ -128,6 +157,8 @@ ApplicationWindow {
                 bold: true
             }
             color: appWnd.textColorPrimary
+            verticalAlignment: Text.AlignVCenter
+            horizontalAlignment: Text.AlignRight
             Layout.alignment: Qt.AlignRight
             Layout.rightMargin: appWnd.padding
         }
@@ -137,8 +168,24 @@ ApplicationWindow {
         if  (appWnd.isDebugMode){
             console.log(`[DEV.UI.Main] Info: ${buildQtVersion}`)
         }
+        showAnimation.start()
     }
 
     //--------------------- non Visual items -------------------------------------
-
+    SequentialAnimation {
+        id: showAnimation
+        PropertyAction {
+            targets: [appVerTxt]
+            property: "visible"
+            value: true
+        }
+        NumberAnimation {
+            targets: [appVerTxt]
+            properties: "opacity"
+            from: 0
+            to: 0.8
+            duration: 2000
+            easing.type: Easing.Linear
+        }
+    }
 }
