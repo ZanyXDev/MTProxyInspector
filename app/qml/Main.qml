@@ -129,27 +129,27 @@ ApplicationWindow {
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: appWnd.padding
-            spacing: appWnd.baseSpacing
+            spacing: 2
             RowLayout {
                 Layout.alignment: Qt.AlignLeft
                 Layout.fillWidth: true
-                Layout.preferredHeight: 86
-                spacing: appWnd.baseSpacing
+                Layout.preferredHeight: 72
+                spacing: 2
                 Image {
-                    Layout.preferredWidth: 72
-                    Layout.preferredHeight: 72
+                    Layout.preferredWidth: 64
+                    Layout.preferredHeight: 64
                     source: "qrc:/qt/qml/assets/images/ic_launcher-playstore.png"
-                    width: 72
-                    height: 72
-                    sourceSize.width: 72
-                    sourceSize.height: 72
+                    width: 64
+                    height: 64
+                    sourceSize.width: 64
+                    sourceSize.height: 64
                     fillMode: Image.PreserveAspectFit
                     smooth: true
                 }
 
                 Label {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 72
+                    Layout.preferredHeight: 64
                     verticalAlignment: Text.AlignVCenter
                     text: qsTr("Тестер MTProxy")
                     font{
@@ -159,118 +159,138 @@ ApplicationWindow {
                     color: darkMode ? solarizedBase2 : solarizedBase02
                 }
             }
+            Rectangle {
+                Layout.preferredWidth: parent.width *0.9
+                Layout.preferredHeight: 1
+                Layout.alignment: Qt.AlignHCenter
+                color: darkMode ? solarizedBase01 : solarizedBase1
+            }
+            Switch{
+                id: themeSwitch
+                Layout.fillWidth: true
+                Layout.preferredHeight: 64
+                text: darkMode ? qsTr("Dark") : qsTr("Light")
+                checked: darkMode
+                onCheckedChanged: darkMode = checked
+            }
+        }
+
+        Item{
+            Layout.fillWidth: true
+            Layout.fillHeight: true
         }
     }
 
-    ColumnLayout {
-        id: mainColumnLayout
-        anchors.fill: parent
-        spacing: 0
 
-        // ─── ОТСТУП СВЕРХУ (48dp) ──────────────────────
-        Item {
-            Layout.fillWidth: true
-            Layout.preferredHeight: appWnd.padding * 3
+ColumnLayout {
+    id: mainColumnLayout
+    anchors.fill: parent
+    spacing: 0
+
+    // ─── ОТСТУП СВЕРХУ (48dp) ──────────────────────
+    Item {
+        Layout.fillWidth: true
+        Layout.preferredHeight: appWnd.padding * 3
+    }
+    Text {
+
+        text: qsTr("Прокси для Телеграм")
+        font{
+            family: appWnd.buiraFont.name
+            pixelSize: 28
+            bold: true
         }
-        Text {
 
-            text: qsTr("Прокси для Телеграм")
-            font{
-                family: appWnd.buiraFont.name
-                pixelSize: 28
-                bold: true
-            }
+        Layout.alignment: Qt.AlignHCenter
+        Layout.bottomMargin: appWnd.padding
+    }
+    MButton {
+        id: btnHelp
+        text: qsTr("Справка")
 
-            Layout.alignment: Qt.AlignHCenter
-            Layout.bottomMargin: appWnd.padding
+        //borderColor:appWnd.textColorSecondary
+
+        font{
+            family: appWnd.droidFont.name
+            pixelSize: 16
         }
+
+        Layout.preferredHeight: 40
+        Layout.preferredWidth: 80
+        Layout.alignment: Qt.AlignHCenter
+        Layout.bottomMargin: appWnd.padding * 2
+
+        // Сигнал для обработки (подключить в C++ или JS)
+        onClicked: {
+            console.log(`btnHelp.clicked()`)
+        }
+    }
+    // ─── КНОПКИ РЕГИОНОВ (горизонтальный ряд) ─────
+    RowLayout {
+        Layout.fillWidth: true
+        Layout.bottomMargin: 24
+        spacing: 8
+
+        // 🇪🇺 Европа
         MButton {
-            id: btnHelp
-            text: qsTr("Справка")
-
-            //borderColor:appWnd.textColorSecondary
-
+            id: btnEurope
+            text: "Европа"
             font{
                 family: appWnd.droidFont.name
-                pixelSize: 16
+                pixelSize: 18
+                bold:true
             }
-
-            Layout.preferredHeight: 40
-            Layout.preferredWidth: 80
-            Layout.alignment: Qt.AlignHCenter
-            Layout.bottomMargin: appWnd.padding * 2
-
-            // Сигнал для обработки (подключить в C++ или JS)
-            onClicked: {
-                console.log(`btnHelp.clicked()`)
-            }
-        }
-        // ─── КНОПКИ РЕГИОНОВ (горизонтальный ряд) ─────
-        RowLayout {
             Layout.fillWidth: true
-            Layout.bottomMargin: 24
-            spacing: 8
-
-            // 🇪🇺 Европа
-            MButton {
-                id: btnEurope
-                text: "Европа"
-                font{
-                    family: appWnd.droidFont.name
-                    pixelSize: 18
-                    bold:true
-                }
-                Layout.fillWidth: true
-                Layout.preferredHeight: 60
+            Layout.preferredHeight: 60
 
 
-                onClicked: {
-                    console.log(`btnEurope.clicked()`)
-                }
+            onClicked: {
+                console.log(`btnEurope.clicked()`)
             }
         }
-
-        Text {
-            id:appVerTxt
-            z: 1
-            opacity: 0
-            visible: false
-            text: qsTr("v. ")+ appWnd.appVersion
-            font{
-                family: appWnd.digitalFont.name
-                pixelSize: 12
-                bold: true
-            }
-
-            verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.AlignRight
-            Layout.alignment: Qt.AlignRight
-            Layout.rightMargin: appWnd.padding
-        }
     }
 
-    Component.onCompleted: {
-        if  (appWnd.isDebugMode){
-            console.log(`[DEV.UI.Main] Info: ${buildQtVersion}`)
+    Text {
+        id:appVerTxt
+        z: 1
+        opacity: 0
+        visible: false
+        text: qsTr("v. ")+ appWnd.appVersion
+        font{
+            family: appWnd.digitalFont.name
+            pixelSize: 12
+            bold: true
         }
-        showAnimation.start()
-    }
 
-    //--------------------- non Visual items -------------------------------------
-    SequentialAnimation {
-        id: showAnimation
-        PropertyAction {
-            targets: [appVerTxt]
-            property: "visible"
-            value: true
-        }
-        NumberAnimation {
-            targets: [appVerTxt]
-            properties: "opacity"
-            from: 0
-            to: 0.8
-            duration: 2000
-            easing.type: Easing.Linear
-        }
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignRight
+        Layout.alignment: Qt.AlignRight
+        Layout.rightMargin: appWnd.padding
     }
+}
+
+Component.onCompleted: {
+    if  (appWnd.isDebugMode){
+        console.log(`[DEV.UI.Main] Info: ${buildQtVersion}`)
+    }
+    showAnimation.start()
+}
+
+//--------------------- non Visual items -------------------------------------
+SequentialAnimation {
+    id: showAnimation
+    PropertyAction {
+        targets: [appVerTxt]
+        property: "visible"
+        value: true
+    }
+    NumberAnimation {
+        targets: [appVerTxt]
+        properties: "opacity"
+        from: 0
+        to: 0.8
+        duration: 2000
+        easing.type: Easing.Linear
+    }
+}
 }
