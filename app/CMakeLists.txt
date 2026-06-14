@@ -59,6 +59,7 @@ qt_add_resources(${APP_NAME} "fonts"
 )
 
 set(QML_FILES
+    qml/MainTest.qml
     qml/Main.qml
     qml/MButton.qml
     qml/MCard.qml
