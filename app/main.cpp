@@ -107,13 +107,7 @@ int main(int argc, char *argv[])
      * когда состояние необходимо только для первоначальной настройки приложения.
      * В этом случае часто можно использовать QQmlApplicationEngine:setInitialProperties.
      */
-    bool isMobile = []() {
-#ifdef Q_OS_ANDROID
-        return true;
-#else
-        return false;
-#endif
-    }();
+
 
     bool isDebugMode = []() {
 #ifdef QT_DEBUG
@@ -127,7 +121,6 @@ int main(int argc, char *argv[])
     QString buildQtVersion = QString("This program build with Qt version %1.").arg(QT_VERSION_STR);
 
     QVariantMap initialProperties;
-    initialProperties["isMobile"] = QVariant::fromValue(isMobile);
     initialProperties["isDebugMode"] = QVariant::fromValue(isDebugMode);
     initialProperties["appVersion"] = QVariant::fromValue(appVersion);
     initialProperties["buildQtVersion"] = QVariant::fromValue(buildQtVersion);

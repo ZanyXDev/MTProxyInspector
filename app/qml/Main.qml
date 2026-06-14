@@ -13,7 +13,6 @@ ApplicationWindow {
     // ----- Property Declarations
     // Required properties should be at the top.
     readonly property int screenOrientation: Qt.PortraitOrientation
-    property bool isConnected: false
     property var screenWidth: Screen.width
     property var screenHeight: Screen.height
     property var screenAvailableWidth: Screen.desktopAvailableWidth
@@ -97,17 +96,22 @@ ApplicationWindow {
     // ----- Signal declarations
 
     // ----- Size information
-    width: (screenOrientation === Qt.PortraitOrientation) ? 360 : 640
-    height: (screenOrientation === Qt.PortraitOrientation) ? 640 : 360
-    maximumHeight: height
-    maximumWidth: width
+    /**
+    * @brief
+    * При работе с Android системами обычно выбирается базовый фрейм 360×640,
+    * для адаптации под удлиненные экраны 18:9 можно использовать размер фрейма 360×720.
+    * Размер фрейма для приложения на системе IOS чаще всего используется 375×812.
+  */
+    width: 360
+    height: 720
+    // Use Screen  margins to ensure text or buttons don't clip into camera cutouts
+    leftPadding: screenAvailableWidth - width > 0 ? 0 : 10
+    topPadding: screenAvailableHeight -height > 0? 0: 20
 
-    minimumHeight: height
-    minimumWidth: width
     // ----- Then comes the other properties. There's no predefined order to these.
     visible: true
     visibility: (isMobile) ? Window.FullScreen : Window.Windowed
-    flags: Qt.Dialog
+    flags: Qt.Window | Qt.ExpandedClientAreaHint
 
     // ----- Qt provided visual children
 
@@ -226,18 +230,8 @@ ApplicationWindow {
             ColumnLayout {
                 anchors.fill: parent
                 spacing: 2
-                Label{
-                    Layout.fillWidth: true
-                    text: qsTr("Списки MTProxy ...")
-                    font{
-                        family: appWnd.droidFont.name
-                        pixelSize: 18
-                        bold:true
-                    }
-                    verticalAlignment: Text.AlignVCenter
-                    horizontalAlignment: Text.AlignHCenter
-                }
                 CheckBox {
+                    id:ruList
                     Layout.fillWidth: true // Принудительно растягиваем на всю доступную ширину
                     text: qsTr("Сервира из [RU] региона")
                     font{
@@ -247,6 +241,7 @@ ApplicationWindow {
                     }
                 }
                 CheckBox {
+                    id:euList
                     Layout.fillWidth: true
                     text: qsTr("Сервира из [EU] региона")
                     font{
@@ -256,6 +251,7 @@ ApplicationWindow {
                     }
                 }
                 CheckBox {
+                    id:surfList
                     Layout.fillWidth: true
                     text: qsTr("Сервира от Surfboardv2ray")
                     font{
@@ -270,6 +266,8 @@ ApplicationWindow {
                 }
                 Button{
                     id:runCheckProxyList
+                    icon.source: isConnected ? "qrc:/qt/qml/assets/images/online.png":"qrc:/qt/qml/assets/images/offline.png"
+                    enabled: isConnected && (ruList.checked | euList.checked | surfList.checked)
                     Layout.alignment: Qt.AlignRight
                     text: qsTr("Проверка прокси")
                     font{
@@ -278,10 +276,6 @@ ApplicationWindow {
                         bold:true
                     }
                 }
-            }
-
-            Component.onCompleted: {
-                console.log(`sourceSelectorPane[${sourceSelectorPane.width}w,${sourceSelectorPane.height}h]`)
             }
         }
         Pane{
@@ -294,84 +288,84 @@ ApplicationWindow {
                 border.width: 1
                 border.color: Material.frameColor
             }
-            ColumnLayout{
-                id:mainPaneColumnLayout
+            ListView {
+                id: listView
                 anchors.fill: parent
-                spacing: baseSpacing
-                ListView {
-                    id: listView
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
 
-                    clip: true
-                    focus: true // Required for arrow keys to work
-                    keyNavigationWraps: true // Allows looping from end to start
+                clip: true
+                focus: true // Required for arrow keys to work
+                keyNavigationWraps: true // Allows looping from end to start
 
-                    model: [
-                        { status: "ok",  text: "mtproxy.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
-                        { status: "ok",  text: "mtproxy1.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
-                        { status: "ok",  text: "mtproxy2.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
-                        { status: "ok",  text: "mtproxy3.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
-                        { status: "bad", text: "mtproxy3.prn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
-                        { status: "ok",  text: "mtproxy.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
-                        { status: "ok",  text: "mtproxy1.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
-                        { status: "ok",  text: "mtproxy2.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
-                        { status: "ok",  text: "mtproxy3.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
-                        { status: "ok",  text: "mtproxy1.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
-                        { status: "ok",  text: "mtproxy2.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
-                        { status: "ok",  text: "mtproxy3.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
-                        { status: "ok",  text: "mtproxy1.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
-                        { status: "ok",  text: "mtproxy2.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
-                        { status: "ok",  text: "mtproxy3.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
-                        { status: "bad", text: "mtproxy3.prn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" }
+                model: [
+                    { status: "ok",  text: "mtproxy.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                    { status: "ok",  text: "mtproxy1.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                    { status: "ok",  text: "mtproxy2.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                    { status: "ok",  text: "mtproxy3.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                    { status: "bad", text: "mtproxy3.prn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                    { status: "ok",  text: "mtproxy.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                    { status: "ok",  text: "mtproxy1.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                    { status: "ok",  text: "mtproxy2.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                    { status: "ok",  text: "mtproxy3.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                    { status: "ok",  text: "mtproxy1.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                    { status: "ok",  text: "mtproxy2.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                    { status: "ok",  text: "mtproxy3.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                    { status: "ok",  text: "mtproxy1.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                    { status: "ok",  text: "mtproxy2.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                    { status: "ok",  text: "mtproxy3.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                    { status: "bad", text: "mtproxy3.prn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" }
 
-                    ]
-                    highlight: Rectangle {
+                ]
+                highlight: Rectangle {
 
-                        color: Material.listHighlightColor
-                        radius: appWnd.m_radius
-                        // Standard Behavior can be used for custom easing
-                        Behavior on y {
-                            SpringAnimation { spring: 3; damping: 0.2 }
-                        }
+                    color: Material.listHighlightColor
+                    radius: appWnd.m_radius
+                    // Standard Behavior can be used for custom easing
+                    Behavior on y {
+                        SpringAnimation { spring: 3; damping: 0.2 }
                     }
-
-                    delegate: MItemDelegate {
-                        required property int index
-                        width: ListView.view.width
-                        hoverEnabled: false
-                        text:qsTr("Title %1").arg(index + 1)
-
-                        icon.source:"qrc:/qt/qml/assets/images/ok.png"
-                        highlighted: ListView.isCurrentItem
-                        onClicked: listView.currentIndex = index
-
-                    }
-                    // Component.onCompleted: currentIndex = 0
                 }
 
-            }
-        }
-        Text {
-            id:appVerTxt
-            z: 1
-            Layout.alignment: Qt.AlignRight | Qt.AlignBottom
+                delegate: MItemDelegate {
+                    required property int index
+                    width: ListView.view.width
+                    hoverEnabled: false
+                    text:qsTr("Title %1").arg(index + 1)
 
-            opacity: 0
-            visible: false
-            text: qsTr("v.")+ appWnd.appVersion + " "
-            font{
-                family: appWnd.digitalFont.name
-                pixelSize: 12
-                bold: true
+                    icon.source:"qrc:/qt/qml/assets/images/ok.png"
+                    highlighted: ListView.isCurrentItem
+                    onClicked: listView.currentIndex = index
+
+                }
+                // Component.onCompleted: currentIndex = 0
             }
-            verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.AlignHCenter
+
         }
         Item{
             Layout.fillWidth: true
             Layout.preferredHeight: 2
         }
+    }
+    Text {
+        Material.theme: appWnd.Material.theme
+        color:  Material.foreground
+        id:appVerTxt
+        z: 1
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        // Добавляем отступы от краев contentItem, чтобы текст не лип к границам
+        anchors.rightMargin: padding / 2
+        anchors.bottomMargin: padding / 2
+
+        opacity:0
+        visible: false
+        text: qsTr("v.")+ appWnd.appVersion + " "
+        font{
+            family: appWnd.digitalFont.name
+            pixelSize: 10
+            bold: true
+        }
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
     }
 
     // BusyIndicator
@@ -385,10 +379,13 @@ ApplicationWindow {
     Component.onCompleted: {
         if  (appWnd.isDebugMode){
             console.log(`[DEV.UI.Main] Info: ${buildQtVersion}`)
-            AndroidUtils.showToast("test message", false)
+            console.log(`Window size: [${appWnd.width}w, ${appWnd.height}h]`)
+            console.log(`screenAvailableWidth:  ${screenAvailableWidth} screenWidth:${screenWidth}`)
+            console.log(`screenAvailableHeight: ${screenAvailableHeight} screenHeight:${screenHeight}`)
 
         }
         showAnimation.start()
+
     }
 
     //--------------------- non Visual items -------------------------------------
@@ -411,22 +408,6 @@ ApplicationWindow {
             duration: 1500
             easing.type: Easing.Linear
         }
-        PauseAnimation {
-            duration: 1000
-        }
-        NumberAnimation {
-            targets: [appVerTxt]
-            properties: "opacity"
-            from: 0.8
-            to: 0
-            duration: 1500
-            easing.type: Easing.Linear
-        }
-        PropertyAction {
-            targets: [appVerTxt]
-            property: "visible"
-            value: false
-        }
 
     }
     /**
@@ -439,13 +420,6 @@ ApplicationWindow {
    */
     Connections {
         target: Core
-
-        function onConnectStatusChanged(success, message){
-            console.log("Статус подключения:", success)
-            console.log("Сообщение:", message)
-            isConnected = success
-            AndroidUtils.showToast(message, false)
-        }
 
         function onProxyUrlListChanged() {
             console.log("Proxy URL list изменился:", Core.proxyUrlList)
