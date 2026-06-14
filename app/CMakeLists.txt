@@ -8,7 +8,25 @@ qt_add_resources(${APP_NAME} "images"
         "/qt/qml"
     FILES
     ../assets/images/ic_launcher-playstore.png
-
+    ../assets/images/more_vert.png
+    ../assets/images/about.png
+    ../assets/images/about@2x.png
+    ../assets/images/moon.png
+    ../assets/images/moon@2x.png
+    ../assets/images/sun.png
+    ../assets/images/sun@2x.png
+    ../assets/images/settings.png
+    ../assets/images/settings@2x.png
+    ../assets/images/cloud-refresh.png
+    ../assets/images/cloud-refresh@2x.png
+    ../assets/images/cloud-refresh@3x.png
+    ../assets/images/cloud-refresh@4x.png
+    ../assets/images/question-mark.png
+    ../assets/images/question-mark@2x.png
+    ../assets/images/question-mark@3x.png
+    ../assets/images/question-mark@4x.png
+    ../assets/images/european-flag.png
+    ../assets/images/russia-flag.png
 )
 
 qt_add_resources(${APP_NAME} "fonts"
