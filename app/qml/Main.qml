@@ -45,6 +45,15 @@ ApplicationWindow {
         source: "qrc:/qt/qml/assets/fonts/nasalization-rg.otf"
     }
 
+    // === Глобальные стили (легко менять в одном месте) ===
+    property color textColorPrimary: "black"
+    property color textColorSecondary: "darkgrey"
+    property color buttonHelpBg: "lightgrey"
+    property color buttonBorder: "lightgrey"
+    property color bgrColor: "lightblue"
+    property real  baseSpacing: 8
+    property real  padding: 16
+
     // ----- Signal declarations
 
     // ----- Size information
@@ -60,12 +69,70 @@ ApplicationWindow {
     visibility: (isMobile) ? Window.FullScreen : Window.Windowed
     flags: Qt.Dialog
 
+    title: qsTr("Проверка MTProxy для Телеграм")
+
     // ----- Qt provided visual children
     background: Rectangle {
         id: background
         anchors.fill: parent
-        color: "lightgrey"
+        color: bgrColor
     }
+    ColumnLayout {
+        id: mainColumnLayout
+        anchors.fill: parent
+        spacing: 0
+
+        // ─── ОТСТУП СВЕРХУ (48dp) ──────────────────────
+        Item {
+            Layout.fillWidth: true
+            Layout.preferredHeight: appWnd.padding * 3
+        }
+        Text {
+            text: qsTr("Прокси для Телеграм")
+            font{
+                family: appWnd.buiraFont.name
+                pixelSize: 28
+                bold: true
+            }
+            color: appWnd.textColorPrimary
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: appWnd.padding
+        }
+        MButton {
+            id: btnHelp
+            text: qsTr("Справка")
+            bgrColor: "lightblue" //appWnd.textColorPrimary
+            //borderColor:appWnd.textColorSecondary
+
+            font{
+                family: appWnd.droidFont.name
+                pixelSize: 16
+            }
+
+            Layout.preferredHeight: 40
+            Layout.preferredWidth: 80
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: appWnd.padding * 2
+
+            // Сигнал для обработки (подключить в C++ или JS)
+            onClicked: {
+                console.log(`btnHelp.clicked()`)
+            }
+        }
+        Text {
+            id:appVersionTxt
+            text: qsTr("v. ")+ appWnd.appVersion
+            font{
+                family: appWnd.digitalFont.name
+                pixelSize: 12
+                bold: true
+            }
+            color: appWnd.textColorPrimary
+            Layout.alignment: Qt.AlignRight
+            Layout.rightMargin: appWnd.padding
+        }
+    }
+
     Component.onCompleted: {
         if  (appWnd.isDebugMode){
             console.log(`[DEV.UI.Main] Info: ${buildQtVersion}`)
