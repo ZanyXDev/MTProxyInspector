@@ -33,6 +33,7 @@ ApplicationWindow {
     property bool darkMode: false
     property real  baseSpacing: 8
     property real  padding: 16
+    property real  m_radius: 12
 
     property FontLoader buiraFont: FontLoader {
         id: buiraFont
@@ -88,8 +89,11 @@ ApplicationWindow {
     Material.theme: darkMode ? Material.Dark : Material.Light
     Material.background: darkMode ? solarizedBase03 : solarizedBase3
     Material.foreground: darkMode ? solarizedBase0 : solarizedBase00
+    Material.accent: solarizedOrange
+    Material.primary: solarizedYellow
 
     Material.elevation : 2
+
     // ----- Signal declarations
 
     // ----- Size information
@@ -149,7 +153,7 @@ ApplicationWindow {
             ToolButton {
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                 // Иконка "три точки" (вертикальные)
-                icon.name: "edit-menu"
+
                 icon.source: "qrc:/qt/qml/assets/images/more_vert.png"
 
                 onClicked: optionsMenu.open()
@@ -198,81 +202,95 @@ ApplicationWindow {
     }
 
     ColumnLayout {
-        Material.theme: appWnd.Material.theme
-        Material.background: darkMode ? solarizedBase02 : solarizedBase2
-        Material.foreground: darkMode ? solarizedBase0 : solarizedBase00
-        Material.elevation: 2
-        Material.accent: solarizedOrange
-        Material.primary: solarizedYellow
-
         id: mainColumnLayout
+        Material.theme: appWnd.Material.theme
+
+        Material.elevation: 2
+
         anchors{
             fill: parent
             margins: padding / 4
         }
 
         spacing: baseSpacing
-        Pane{
+        Pane {
+            id: sourceSelectorPane
             Layout.fillWidth: true
-            Layout.preferredHeight: 72
-
             background: Rectangle {
                 color: Material.backgroundColor
-                radius: 8
+                radius: appWnd.m_radius
                 border.width: 1
                 border.color: Material.frameColor
             }
-            RowLayout {
+
+            ColumnLayout {
                 anchors.fill: parent
-                spacing: baseSpacing
-                Image{
-                    Layout.alignment: Qt.AlignCenter
-                    Layout.preferredWidth: 64
-                    Layout.preferredHeight: 48
-                    Layout.leftMargin: baseSpacing
-
-                    width: 64
-                    height: 48
-                    source:(isEURegion) ? "qrc:/qt/qml/assets/images/flags/eu.svg": "qrc:/qt/qml/assets/images/flags/ru.svg"
-                    fillMode: Image.PreserveAspectCrop
-                    smooth: true
-                    clip:true
-                }
-
-                Label {
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.preferredHeight: 48
+                spacing: 2
+                Label{
                     Layout.fillWidth: true
-                    text: (isEURegion) ? qsTr("MTProxy регион [EU]"): qsTr("MTProxy регион [RU]")
+                    text: qsTr("Списки MTProxy ...")
+                    font{
+                        family: appWnd.droidFont.name
+                        pixelSize: 18
+                        bold:true
+                    }
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignHCenter
+                }
+                CheckBox {
+                    Layout.fillWidth: true // Принудительно растягиваем на всю доступную ширину
+                    text: qsTr("Сервира из [RU] региона")
                     font{
                         family: appWnd.droidFont.name
                         pixelSize: 16
                         bold:true
                     }
-
-                    verticalAlignment: Text.AlignVCenter
-                    horizontalAlignment: Text.AlignLeft
                 }
-                Switch{
-                    Layout.alignment: Qt.AlignHCenter
+                CheckBox {
                     Layout.fillWidth: true
-                    checked: isEURegion
-                    onCheckedChanged: {
-                        isEURegion = checked
-                        busyIndicator.visible = true
-                        Core.proxyUrlList = isEURegion ? "https://raw.githubusercontent.com/kort0881/telegram-proxy-collector/main/proxy_eu.txt" : "https://raw.githubusercontent.com/kort0881/telegram-proxy-collector/main/proxy_ru.txt"
+                    text: qsTr("Сервира из [EU] региона")
+                    font{
+                        family: appWnd.droidFont.name
+                        pixelSize: 16
+                        bold:true
                     }
                 }
+                CheckBox {
+                    Layout.fillWidth: true
+                    text: qsTr("Сервира от Surfboardv2ray")
+                    font{
+                        family: appWnd.droidFont.name
+                        pixelSize: 16
+                        bold:true
+                    }
+                }
+                Frame{
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 2
+                }
+                Button{
+                    id:runCheckProxyList
+                    Layout.alignment: Qt.AlignRight
+                    text: qsTr("Проверка прокси")
+                    font{
+                        family: appWnd.droidFont.name
+                        pixelSize: 15
+                        bold:true
+                    }
+                }
+            }
+
+            Component.onCompleted: {
+                console.log(`sourceSelectorPane[${sourceSelectorPane.width}w,${sourceSelectorPane.height}h]`)
             }
         }
         Pane{
             id:paneListView
             Layout.fillWidth: true
-            Layout.fillHeight: true
-
+            Layout.fillHeight:  true
             background: Rectangle {
                 color: Material.backgroundColor
-                radius: 8
+                radius: appWnd.m_radius
                 border.width: 1
                 border.color: Material.frameColor
             }
@@ -311,7 +329,7 @@ ApplicationWindow {
                     highlight: Rectangle {
 
                         color: Material.listHighlightColor
-                        radius: 8
+                        radius: appWnd.m_radius
                         // Standard Behavior can be used for custom easing
                         Behavior on y {
                             SpringAnimation { spring: 3; damping: 0.2 }
@@ -331,86 +349,28 @@ ApplicationWindow {
                     }
                     // Component.onCompleted: currentIndex = 0
                 }
-                Text {
-                    id:appVerTxt
-                    z: 1
-                    Layout.alignment: Qt.AlignRight | Qt.AlignBottom
 
-                    opacity: 0
-                    visible: false
-                    text: qsTr("v.")+ appWnd.appVersion + " "
-                    font{
-                        family: appWnd.digitalFont.name
-                        pixelSize: 12
-                        bold: true
-                    }
-                    verticalAlignment: Text.AlignVCenter
-                    horizontalAlignment: Text.AlignHCenter
-                }
-                Item{
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: padding / 2
-                }
             }
         }
-        Pane{
+        Text {
+            id:appVerTxt
+            z: 1
+            Layout.alignment: Qt.AlignRight | Qt.AlignBottom
+
+            opacity: 0
+            visible: false
+            text: qsTr("v.")+ appWnd.appVersion + " "
+            font{
+                family: appWnd.digitalFont.name
+                pixelSize: 12
+                bold: true
+            }
+            verticalAlignment: Text.AlignVCenter
+            horizontalAlignment: Text.AlignHCenter
+        }
+        Item{
             Layout.fillWidth: true
-            Layout.preferredHeight: 64
-            background: Rectangle {
-                color: Material.backgroundColor
-                radius: 8
-                border.width: 1
-                border.color: Material.frameColor
-            }
-            RowLayout {
-                anchors.fill: parent
-                spacing: baseSpacing
-                property bool  isOnline: false
-                property string text
-
-                Image{
-                    Layout.alignment: Qt.AlignCenter
-                    Layout.preferredWidth: 48
-                    Layout.preferredHeight: 48
-                    Layout.leftMargin: baseSpacing
-
-                    width: 48
-                    height: 48
-                    //source:(isOnLine) ? "qrc:/qt/qml/assets/images/online.png": "qrc:/qt/qml/assets/images/offline.png"
-                    source: "qrc:/qt/qml/assets/images/online.png"
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true
-                    clip:true
-                }
-
-                Button {
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.preferredHeight: 48
-                    Layout.fillWidth: true
-                    font{
-                        family: appWnd.droidFont.name
-                        pixelSize: 16
-                        bold:true
-                    }
-                    text: "cloud.mtproxy.pw"
-                    onClicked: {
-                        // Opens the URL in the system's default web browser
-                        Qt.openUrlExternally("tg://proxy?server=cloud.mtproxy.pw&port=443&secret=ee3f8a91c2d7e04b6a9f12c5e8370bd4aa786170692e6f7a6f6e2e7275")
-                    }
-                }
-
-
-                ToolButton {
-                    Layout.alignment: Qt.AlignRight | Qt.AlignHCenter
-                    Layout.preferredHeight: 48
-
-                    icon.name: "add-telegram"
-                    icon.source: "qrc:/qt/qml/assets/images/more_vert.png"
-
-                    onClicked: optionsMenu.open()
-                }
-
-            }
+            Layout.preferredHeight: 2
         }
     }
 
@@ -426,6 +386,7 @@ ApplicationWindow {
         if  (appWnd.isDebugMode){
             console.log(`[DEV.UI.Main] Info: ${buildQtVersion}`)
             AndroidUtils.showToast("test message", false)
+
         }
         showAnimation.start()
     }
@@ -476,7 +437,6 @@ ApplicationWindow {
    * Имя функции	on<Сигнал>Changed (с заглавной буквы после on)
    * Аргументы	Принимаются в порядке, как в signals C++
    */
-
     Connections {
         target: Core
 
@@ -492,5 +452,9 @@ ApplicationWindow {
             AndroidUtils.showToast(qsTr("Proxy URL list изменился!"), false)
         }
 
+        function onShowToastMessage( message){
+            AndroidUtils.showToast(message, false)
+        }
     }
+
 }
