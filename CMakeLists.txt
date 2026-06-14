@@ -50,6 +50,7 @@ if(VERSION_LIST_LENGTH GREATER_EQUAL 3)
 else()
     set(APP_VERSION_CODE "1")
 endif()
+
 message(STATUS "✓ App version code: ${APP_VERSION_CODE}")
 
 project(${APP_NAME} VERSION ${APP_VERSION} LANGUAGES CXX)
