@@ -35,23 +35,20 @@ QStandardItemModel *Core::boardModel() const
     return m_boardModel;
 }
 
-bool Core::value() const
+void Core::setProxyUrlList(const QString &newProxyUrlList)
 {
-    return m_value;
+    if (m_proxyUrlList == newProxyUrlList)
+        return;
+    m_proxyUrlList = newProxyUrlList;
+    emit proxyUrlListChanged();
 }
 
-void Core::setValue(bool newValue)
+QString Core::proxyUrlList() const
 {
-    QModelIndex idx = m_boardModel->index(0,0);
-    QStandardItem *item = m_boardModel->itemFromIndex(idx);
-    qDebug() << "item.data(Qt::UserRole + 1):" << item->data(Qt::UserRole + 1)
-             << "item.data(Qt::UserRole + 2):" << item->data(Qt::UserRole + 2) ;
+    return m_proxyUrlList;
+}
 
-    (newValue) ? item->setData(99, Qt::UserRole + 1): item->setData(66, Qt::UserRole + 1);
-    item->setData(newValue, Qt::UserRole + 2);
+void Core::fetchProxyList(const QString &url)
+{
 
-    if (m_value == newValue)
-        return;
-    m_value = newValue;
-    emit valueChanged();
 }

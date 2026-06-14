@@ -31,7 +31,6 @@ ApplicationWindow {
     ///TODO add load/save in app Settings
     // Theme selection
     property bool darkMode: false
-
     property real  baseSpacing: 8
     property real  padding: 16
 
@@ -105,6 +104,9 @@ ApplicationWindow {
     visible: true
     visibility: (isMobile) ? Window.FullScreen : Window.Windowed
     flags: Qt.Dialog
+
+
+
 
     // ----- Qt provided visual children
 
@@ -265,7 +267,11 @@ ApplicationWindow {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.fillWidth: true
                     checked: isEURegion
-                    onCheckedChanged: isEURegion = checked
+                    onCheckedChanged: {
+                        isEURegion = checked
+                        busyIndicator.visible = true
+                        Core.proxyUrlList = isEURegion ? "https://raw.githubusercontent.com/kort0881/telegram-proxy-collector/main/proxy_eu.txt" : "https://raw.githubusercontent.com/kort0881/telegram-proxy-collector/main/proxy_ru.txt"
+                    }
                 }
             }
         }
@@ -380,7 +386,8 @@ ApplicationWindow {
 
                     width: 48
                     height: 48
-                    source:(isOnLine) ? "qrc:/qt/qml/assets/images/online.png": "qrc:/qt/qml/assets/images/offline.png"
+                    //source:(isOnLine) ? "qrc:/qt/qml/assets/images/online.png": "qrc:/qt/qml/assets/images/offline.png"
+                    source: "qrc:/qt/qml/assets/images/online.png"
                     fillMode: Image.PreserveAspectFit
                     smooth: true
                     clip:true
@@ -415,6 +422,14 @@ ApplicationWindow {
 
             }
         }
+    }
+
+    // BusyIndicator
+    BusyIndicator {
+        id: busyIndicator
+        anchors.centerIn: parent
+        visible: false
+        running: visible
     }
 
     Component.onCompleted: {
@@ -461,5 +476,32 @@ ApplicationWindow {
         //     value: false
         // }
 
+    }
+  /**
+   * @brief Ключевые моменты для Qt6:
+   * Аспект         Описание
+   * QML_SINGLETON	Позволяет обращаться к классу как Core напрямую в QML
+   * Connections	Основной способ подключения к сигналам в Qt6 QML
+   * Имя функции	on<Сигнал>Changed (с заглавной буквы после on)
+   * Аргументы	Принимаются в порядке, как в signals C++
+   */
+
+    Connections {
+        target: Core
+
+        function onProxyUrlListChanged() {
+            console.log("Proxy URL list изменился:", Core.proxyUrlList)
+        }
+
+        function onLoadingStatusChanged(success, message, errorType) {
+            console.log("Статус загрузки:", success)
+            console.log("Сообщение:", message)
+            console.log("Тип ошибки:", errorType)
+
+            if (!success) {
+                // Показать ошибку пользователю
+                console.error("Ошибка загрузки прокси:", errorType)
+            }
+        }
     }
 }
