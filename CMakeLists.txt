@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
 
-# Читаем имя приложения из файла ДО project()
-file(READ "${CMAKE_CURRENT_SOURCE_DIR}/activity_name.txt" APP_NAME_RAW)
-string(STRIP "${APP_NAME_RAW}" APP_NAME)
+set (APP_NAME "MTProxyInspector")
+set (APP_VERSION 0.1.3)
+set (APP_VERSION_CODE "013")
+set (APP_PACKAGE_NAME "io.github.zanyxdev.mtproxyinspector")
 
-project(${APP_NAME} VERSION 1.0.0 LANGUAGES CXX)
+project(${APP_NAME} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -26,19 +27,10 @@ set(CMAKE_UNITY_BUILD_BATCH_SIZE 4)  # баланс между скорость�
 
 # ----------------------------------------------------------------------------
 
-# ----------------------------------------------------------------------------
-# Читаем метаданные проекта из файлов
-# ----------------------------------------------------------------------------
-file(READ "${CMAKE_CURRENT_SOURCE_DIR}/version.txt" APP_VERSION_RAW)
-string(STRIP "${APP_VERSION_RAW}" APP_VERSION)
-
-file(READ "${CMAKE_CURRENT_SOURCE_DIR}/package_name.txt" PACKAGE_NAME_RAW)
-string(STRIP "${PACKAGE_NAME_RAW}" PACKAGE_NAME)
-
 # Compile definitions (аналог DEFINES в .pro)
 add_compile_definitions(
     VERSION_STR="${APP_VERSION}"
-    PACKAGE_NAME_STR="${PACKAGE_NAME}"
+    PACKAGE_NAME_STR="${APP_PACKAGE_NAME}"
     ACTIVITY_NAME_STR="${APP_NAME}"
     QT_DEPRECATED_WARNINGS
     # QT_NO_CAST_FROM_ASCII
