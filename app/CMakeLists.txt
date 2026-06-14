@@ -11,12 +11,20 @@ qt_add_resources(${APP_NAME} "images"
     ../assets/images/more_vert.png
     ../assets/images/about.png
     ../assets/images/about@2x.png
+    ../assets/images/about@3x.png
+    ../assets/images/about@4x.png
     ../assets/images/moon.png
     ../assets/images/moon@2x.png
+    ../assets/images/moon@3x.png
+    ../assets/images/moon@4x.png
     ../assets/images/sun.png
     ../assets/images/sun@2x.png
+    ../assets/images/sun@3x.png
+    ../assets/images/sun@4x.png
     ../assets/images/settings.png
     ../assets/images/settings@2x.png
+    ../assets/images/settings@3x.png
+    ../assets/images/settings@4x.png
     ../assets/images/cloud-refresh.png
     ../assets/images/cloud-refresh@2x.png
     ../assets/images/cloud-refresh@3x.png
