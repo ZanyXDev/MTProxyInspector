@@ -117,108 +117,109 @@ ApplicationWindow {
 
     // ----- Qt provided visual children
 
-    header: ToolBar {
-
-        Material.theme: appWnd.Material.theme
-        Material.background: darkMode ? solarizedBase02 : solarizedBase2
-        Material.foreground: darkMode ? solarizedBase0 : solarizedBase00
-        Material.elevation: 2
-
-        background:Rectangle {
-            anchors{
-                fill: parent
-            }
-            color: Material.backgroundColor
-        }
-        RowLayout {
-            spacing: baseSpacing
-            anchors{
-                fill: parent
-            }
-            Item{
-                id:spacer
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-            }
-            Label {
-                id:titleLabel
-                Layout.alignment: Qt.AlignVCenter  // Вертикальное центрирование
-                Layout.fillHeight: true            // Заполнить высоту родителя
-                Layout.fillWidth: false
-                Layout.leftMargin: padding
-
-                text: qsTr("Тест MTProxy для Телеграм")
-                font{
-                    family: appWnd.droidFont.name
-                    pixelSize: 18
-                    bold:true
-                }
-                verticalAlignment: Text.AlignVCenter
-                horizontalAlignment: Text.AlignHCenter
-            }
-            ToolButton {
-                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                // Иконка "три точки" (вертикальные)
-
-                icon.source: "qrc:/qt/qml/assets/images/more_vert.png"
-
-                onClicked: optionsMenu.open()
-
-                Menu {
-                    id: optionsMenu
-                    y: parent.height
-
-                    MenuItem {
-                        icon.source: "qrc:/qt/qml/assets/images/settings.png"
-                        text: qsTr("Настройки")
-                        onTriggered: console.log("Настройки выбраны")
-                    }
-                    MenuItem {
-                        id:themeModeMenu
-                        icon.source: (appWnd.darkMode) ?  "qrc:/qt/qml/assets/images/sun.png" :"qrc:/qt/qml/assets/images/moon.png"
-                        text:(appWnd.darkMode) ? qsTr("Дневной") :qsTr("Ночной")
-                        onTriggered: {
-
-                            console.log(`Выбран режим:${themeModeMenu.text}`)
-                            appWnd.darkMode = ! appWnd.darkMode
-
-                        }
-                    }
-                    MenuItem {
-                        icon.source: "qrc:/qt/qml/assets/images/question-mark.png"
-                        text: qsTr("Справка")
-                        onTriggered: {
-                            console.log("Справка выбрано")
-                        }
-                    }
-                    MenuSeparator{
-                    }
-                    MenuItem {
-                        icon.source: "qrc:/qt/qml/assets/images/about.png"
-                        //icon.color: "transparent" // Set to transparent to use original icon colors
-                        text: qsTr("О программе")
-                        onTriggered: console.log("О программе выбрано")
-                    }
-                    Component.onCompleted: {
-                        console.log(`Menu.Material.listHighlightColor ${optionsMenu.Material.listHighlightColor}`)
-                    }
-                }
-            }
-        }
-    }
 
     ColumnLayout {
         id: mainColumnLayout
         Material.theme: appWnd.Material.theme
-
         Material.elevation: 2
-
+        anchors.centerIn: parent
         anchors{
             fill: parent
-            margins: padding / 4
+            margins: padding /2
+            leftMargin: 2
+            rightMargin: 8
+            topMargin: 8
+            bottomMargin: 10
         }
 
         spacing: baseSpacing
+
+        Pane {
+            id: headerPane
+            Layout.fillWidth: true
+            background: Rectangle {
+                color: Material.backgroundColor
+                //radius: appWnd.m_radius
+                // border.width: 1
+                // border.color: Material.frameColor
+            }
+            RowLayout {
+                spacing: baseSpacing
+                anchors{
+                    fill: parent
+                }
+                Item{
+                    id:spacer
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+                Label {
+                    id:titleLabel
+                    Layout.alignment: Qt.AlignVCenter  // Вертикальное центрирование
+                    Layout.fillHeight: true            // Заполнить высоту родителя
+                    Layout.fillWidth: false
+                    Layout.leftMargin: padding
+
+                    text: qsTr("Тест MTProxy для Телеграм")
+                    font{
+                        family: appWnd.droidFont.name
+                        pixelSize: 18
+                        bold:true
+                    }
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignHCenter
+                }
+                ToolButton {
+                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                    // Иконка "три точки" (вертикальные)
+
+                    icon.source: "qrc:/qt/qml/assets/images/more_vert.png"
+
+                    onClicked: optionsMenu.open()
+
+                    Menu {
+                        id: optionsMenu
+                        y: parent.height
+
+                        MenuItem {
+                            icon.source: "qrc:/qt/qml/assets/images/settings.png"
+                            text: qsTr("Настройки")
+                            onTriggered: console.log("Настройки выбраны")
+                        }
+                        MenuItem {
+                            id:themeModeMenu
+                            icon.source: (appWnd.darkMode) ?  "qrc:/qt/qml/assets/images/sun.png" :"qrc:/qt/qml/assets/images/moon.png"
+                            text:(appWnd.darkMode) ? qsTr("Дневной") :qsTr("Ночной")
+                            onTriggered: {
+
+                                console.log(`Выбран режим:${themeModeMenu.text}`)
+                                appWnd.darkMode = ! appWnd.darkMode
+
+                            }
+                        }
+                        MenuItem {
+                            icon.source: "qrc:/qt/qml/assets/images/question-mark.png"
+                            text: qsTr("Справка")
+                            onTriggered: {
+                                console.log("Справка выбрано")
+                            }
+                        }
+                        MenuSeparator{
+                        }
+                        MenuItem {
+                            icon.source: "qrc:/qt/qml/assets/images/about.png"
+                            //icon.color: "transparent" // Set to transparent to use original icon colors
+                            text: qsTr("О программе")
+                            onTriggered: console.log("О программе выбрано")
+                        }
+                        Component.onCompleted: {
+                            console.log(`Menu.Material.listHighlightColor ${optionsMenu.Material.listHighlightColor}`)
+                        }
+                    }
+                }
+            }
+
+        }
         Pane {
             id: sourceSelectorPane
             Layout.fillWidth: true
@@ -355,8 +356,8 @@ ApplicationWindow {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         // Добавляем отступы от краев contentItem, чтобы текст не лип к границам
-        anchors.rightMargin: padding / 2
-        anchors.bottomMargin: padding / 2
+        anchors.rightMargin: 16
+        anchors.bottomMargin: 6
 
         opacity:0
         visible: false
