@@ -1,7 +1,8 @@
 #include "androidutils.h"
 
 #ifdef Q_OS_ANDROID
-#include <QJniObject>
+#include <QJniObject>      // ✅ для QNativeInterface::QAndroidApplication
+#include <QCoreApplication>
 #endif
 
 AndroidUtils *AndroidUtils::create(QQmlEngine *qmlEngine, QJSEngine *jsEngine)
@@ -21,29 +22,30 @@ AndroidUtils *AndroidUtils::create(QQmlEngine *qmlEngine, QJSEngine *jsEngine)
 }
 
 
-void AndroidUtils::showToast(const QString &message, bool isLong) {
+
+void AndroidUtils::showToast(const QString &message, bool isLong)
+{
 #ifdef Q_OS_ANDROID
-    // Переводим текст в Java String
-    QJniObject javaMessage = QJniObject::fromString(message);
-    jint duration = isLong ? 1 : 0; // 1 = Toast.LENGTH_LONG, 0 = Toast.LENGTH_SHORT
+    // ✅ Выполняем в главном UI-потоке Android, где есть Looper
+    QNativeInterface::QAndroidApplication::runOnAndroidMainThread([message, isLong]() {
+        QJniObject javaMessage = QJniObject::fromString(message);
+        jint duration = isLong ? 1 : 0; // 1 = Toast.LENGTH_LONG, 0 = Toast.LENGTH_SHORT
 
-    // Получаем контекст текущего Android-приложения
-    QJniObject context = QNativeInterface::QAndroidApplication::context();
+        QJniObject context = QNativeInterface::QAndroidApplication::context();
 
-    // Вызываем статический метод Toast.makeText
-    QJniObject toast = QJniObject::callStaticObjectMethod(
-        "android/widget/Toast",
-        "makeText",
-        "(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;",
-        context.object(),
-        javaMessage.object(),
-        duration
-        );
+        QJniObject toast = QJniObject::callStaticObjectMethod(
+            "android/widget/Toast",
+            "makeText",
+            "(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;",
+            context.object(),
+            javaMessage.object(),
+            duration
+            );
 
-    // Если объект успешно создан, вызываем метод .show()
-    if (toast.isValid()) {
-        toast.callMethod<void>("show");
-    }
+        if (toast.isValid()) {
+            toast.callMethod<void>("show");
+        }
+    });
 #else
     qDebug() << "Toast (Desktop emulation):" << message;
 #endif
@@ -52,7 +54,9 @@ void AndroidUtils::showToast(const QString &message, bool isLong) {
 AndroidUtils::AndroidUtils(QObject *parent)
     : QObject(parent)
 {
-    qDebug() << "[INIT_ORDER] >>> AndroidUtils created at"
+    qDebug() << Q_FUNC_INFO
+             << "[INIT_ORDER] >>> AndroidUtils created at"
              << QTime::currentTime().toString("hh:mm:ss.zzz")
-             << ", instance:" << this;
+             << ", instance:" << this
+             << ", parent:" << parent;
 }
