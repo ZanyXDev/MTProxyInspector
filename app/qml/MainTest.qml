@@ -75,35 +75,77 @@ ApplicationWindow {
     }
     topPadding: 0
 
-        ListView {
-            id: listView
-            anchors.fill: parent
-            model: 10
-            delegate: Image {
-                required property int index
-                width: listView.width; height: 250
-                source: "https://loremflickr.com/320/240?lock=" + (index + 1)
-            }
 
-            topMargin: SafeArea.margins.top
+    // Material Configuration for Solarized
+    Material.theme: Material.Light // Or Material.Dark
+    Material.primary: "#fdf6e3"    // Base3 (Background)
+    Material.accent: "#268bd2"     // Blue (Buttons, switches)
+    Material.foreground: "#586e75" // Base0 (Text, icons)
 
-            onTopMarginChanged: {
-                // Keep content position stable
-                if (!dragging && atYBeginning)
-                    contentY = -topMargin
-            }
+    // Override background color for native QML components
+    color: "#fdf6e3"
+
+    Pane {
+        id: root
+        Material.background: appWnd.Material.background
+        width: parent.width -10
+        height:96
+        padding: 0
+        topPadding: 0
+        bottomPadding: 0
+        Material.elevation: 8 // Добавляем тень сверху, как в Material Design
+        background: Rectangle {
+            id:bgrRect
+            color: Material.backgroundColor
+
+            border.width: 1
+            border.color: Material.frameColor
         }
+        // Контейнер для кнопок
+        Button {
+            text: "Solarized Action"
+            anchors.centerIn: parent
+
+            // Elevation example
+            Material.elevation: 6
+        }
+    }
+ footer:  Pane {
+        id: myPane
+
+        Material.elevation: 16
+        Material.background: "red" // Or any solid color/theme-defined color
+    }
+
+    // ListView {
+    //     id: listView
+    //     anchors.fill: parent
+    //     model: 10
+    //     delegate: Image {
+    //         required property int index
+    //         width: listView.width; height: 250
+    //         source: "https://loremflickr.com/320/240?lock=" + (index + 1)
+    //     }
+
+    //     topMargin: SafeArea.margins.top
+
+    //     onTopMarginChanged: {
+    //         // Keep content position stable
+    //         if (!dragging && atYBeginning)
+    //             contentY = -topMargin
+    //     }
+    // }
 
     Component.onCompleted: {
-        console.log(`parentItem: [${parentItem.width}w,${parentItem.height}h]`)
-        console.log(`childItem: [${childItem.width}w,${childItem.height}h]`)
+        console.log(`appWnd: [${appWnd.width}w,${appWnd.height}h]`)
+        console.log(`listView: [${listView.width}w,${listView.height}h]`)
         console.log(`screenWidth: ${screenWidth} screenHeight: ${screenHeight}`)
 
         console.log(`screenWidth: ${screenWidth} screenHeight: ${screenHeight}`)
         console.log(`screenAvailableWidth: ${screenAvailableWidth} screenAvailableHeight:${screenAvailableHeight}`)
 
         // Логируем SafeArea, чтобы убедиться, что Android вернул отступы для закруглений
-        console.log(`SafeArea Top: ${parentItem.SafeArea.margins.top}, Bottom: ${parentItem.SafeArea.margins.bottom}`)
-        console.log(`SafeArea Left: ${parentItem.SafeArea.margins.left}, Right: ${parentItem.SafeArea.margins.right}`)
+        console.log(`SafeArea Top: ${appWnd.SafeArea.margins.top}, Bottom: ${appWnd.SafeArea.margins.bottom}`)
+        console.log(`SafeArea Left: ${appWnd.SafeArea.margins.left}, Right: ${appWnd.SafeArea.margins.right}`)
     }
 }

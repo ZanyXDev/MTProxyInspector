@@ -65,15 +65,16 @@ set(QML_FILES
     qml/MCard.qml
     qml/MListView.qml
     qml/MItemDelegate.qml
+    qml/NavigationPane.qml
 )
 
 qt_add_qml_module(${APP_NAME}
     URI io.github.zanyxdev.mtproxyinspector
     VERSION 1.0
     QML_FILES ${QML_FILES}
+    QML_FILES qml/NavigationPane.qml
 )
 
-# После qt_add_qml_module(...) добавьте:
 target_compile_definitions(${APP_NAME} PRIVATE
     $<$<CONFIG:Debug>:
         QML_DEV_IMPORT_PATH="${QT_QML_OUTPUT_DIRECTORY}"
@@ -86,7 +87,7 @@ target_link_libraries(${APP_NAME}
         Qt6::Gui
         Qt6::Qml
         Qt6::Quick          # <-- обязательно, если есть #include <QQuickWindow>
-         Qt6::Network
+        Qt6::Network
 )
 
 if(ANDROID)
