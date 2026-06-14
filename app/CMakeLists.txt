@@ -1,7 +1,9 @@
 #Чтобы qmllint и QtCreator находили модуль при разработке,
 set(QT_QML_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/qt/qml")
 
-qt_add_executable(${APP_NAME} main.cpp)
+qt_add_executable(${APP_NAME}
+    main.cpp
+)
 
 qt_add_resources(${APP_NAME} "images"
     PREFIX
@@ -33,8 +35,17 @@ qt_add_resources(${APP_NAME} "images"
     ../assets/images/question-mark@2x.png
     ../assets/images/question-mark@3x.png
     ../assets/images/question-mark@4x.png
+    ../assets/images/online.png
+    ../assets/images/online@2x.png
+    ../assets/images/online@3x.png
+    ../assets/images/online@4x.png
+    ../assets/images/offline.png
+    ../assets/images/offline@2x.png
+    ../assets/images/offline@3x.png
+    ../assets/images/offline@4x.png
     ../assets/images/flags/eu.svg
     ../assets/images/flags/ru.svg
+    ../assets/images/ok.png
 )
 
 qt_add_resources(${APP_NAME} "fonts"
@@ -50,12 +61,15 @@ qt_add_resources(${APP_NAME} "fonts"
 set(QML_FILES
     qml/Main.qml
     qml/MButton.qml
+    qml/MCard.qml
+    qml/MListView.qml
+    qml/MItemDelegate.qml
 )
 
 qt_add_qml_module(${APP_NAME}
     URI io.github.zanyxdev.mtproxyinspector
     VERSION 1.0
-    QML_FILES ${QML_FILES}   
+    QML_FILES ${QML_FILES}
 )
 
 # После qt_add_qml_module(...) добавьте:
@@ -73,6 +87,38 @@ target_link_libraries(${APP_NAME}
         Qt6::Quick          # <-- обязательно, если есть #include <QQuickWindow>
 )
 
+if(ANDROID)
+    set_target_properties(${APP_NAME} PROPERTIES
+        #QT_ANDROID_ABIS "armeabi-v7a;arm64-v8a;x86;x86_64"
+        #QT_ANDROID_BUILD_ALL_ABIS ON
+        QT_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android/"
+        QT_ANDROID_PACKAGE_NAME ${PACKAGE_NAME}
+        QT_ANDROID_APP_NAME "MTProxy Inspector"
+        QT_ANDROID_APP_ICON "@mipmap/ic_launcher"
+        #QT_ANDROID_APP_ICON "@drawable/icon"
+        QT_ANDROID_TARGET_SDK_VERSION 36
+        # Minimal version Android 8.0
+        QT_ANDROID_MIN_SDK_VERSION 26
+        QT_ANDROID_VERSION_NAME "0.1.3"
+        QT_ANDROID_VERSION_CODE 013
+    )
+
+    qt_add_android_permission(${APP_NAME}
+        NAME android.permission.BLUETOOTH_SCAN
+        ATTRIBUTES
+            minSdkVersion 31
+            usesPermissionFlags neverForLocation
+    )
+    qt_add_android_permission(${APP_NAME}
+        NAME android.permission.ACCESS_COARSE_LOCATION
+    )
+# ----------------------------------------------------------------------------
+message(STATUS "[ANDROID] QT_ANDROID_PACKAGE_SOURCE_DIR = ${QT_ANDROID_PACKAGE_SOURCE_DIR}")
+message(STATUS "[ANDROID] QT_ANDROID_PACKAGE_NAME       = ${QT_ANDROID_PACKAGE_NAME}")
+message(STATUS "[ANDROID] QT_ANDROID_APP_NAME           = ${QT_ANDROID_APP_NAME}")
+message(STATUS "[ANDROID] QT_ANDROID_APP_ICON           = ${QT_ANDROID_APP_ICON}")
+# ----------------------------------------------------------------------------
+endif()
 
 install(TARGETS ${APP_NAME}
     BUNDLE DESTINATION .

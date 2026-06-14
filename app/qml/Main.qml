@@ -55,14 +55,27 @@ ApplicationWindow {
     // -------------------- Глобальные стиль --------------------------------
 
     // Solarized color palette
-    readonly property color solarizedBase03: "#002b36"
-    readonly property color solarizedBase02: "#073642"
-    readonly property color solarizedBase01: "#586e75"
-    readonly property color solarizedBase00: "#657b83"
-    readonly property color solarizedBase0: "#839496"
-    readonly property color solarizedBase1: "#93a1a1"
-    readonly property color solarizedBase2: "#eee8d5"
+    // Dark theme
     readonly property color solarizedBase3: "#fdf6e3"
+    readonly property color solarizedBase2: "#eee8d5"
+
+    readonly property color solarizedBase1: "#93a1a1" // опционально подчеркнутый
+    readonly property color solarizedBase0: "#839496" // primary content основной текст
+    readonly property color solarizedBase00: "#657b83"
+    readonly property color solarizedBase01: "#586e75"// secondary content коментарии
+    readonly property color solarizedBase02: "#073642"// background highlights
+    readonly property color solarizedBase03: "#002b36"// background
+
+    // Ligth theme
+    // solarizedBase03
+    // solarizedBase02
+    // solarizedBase01 // опционально подчеркнутый
+    // solarizedBase00 // primary content основной текст
+    // solarizedBase0
+    // solarizedBase1 // secondary content коментарии
+    // solarizedBase2 // background highlights
+    // solarizedBase3 // background
+
     readonly property color solarizedYellow: "#b58900"
     readonly property color solarizedOrange: "#cb4b16"
     readonly property color solarizedRed: "#dc322f"
@@ -71,11 +84,13 @@ ApplicationWindow {
     readonly property color solarizedBlue: "#268bd2"
     readonly property color solarizedCyan: "#2aa198"
     readonly property color solarizedGreen: "#859900"
+    readonly property color hightlightcolor: "#1e000000"
 
     Material.theme: darkMode ? Material.Dark : Material.Light
-    Material.accent: solarizedCyan
-    Material.primary: solarizedBlue
+    Material.background: darkMode ? solarizedBase03 : solarizedBase3
+    Material.foreground: darkMode ? solarizedBase0 : solarizedBase00
 
+    Material.elevation : 2
     // ----- Signal declarations
 
     // ----- Size information
@@ -93,12 +108,10 @@ ApplicationWindow {
 
     // ----- Qt provided visual children
 
-    Material.background: darkMode ? solarizedBase00 : solarizedBase0
-    Material.foreground: darkMode ? solarizedBase0 : solarizedBase00
-
     header: ToolBar {
+        Material.theme: appWnd.Material.theme
         Material.background: darkMode ? solarizedBase02 : solarizedBase2
-        Material.foreground: darkMode ? solarizedBase2 : solarizedBase02
+        Material.foreground: darkMode ? solarizedBase0 : solarizedBase00
         Material.elevation: 2
 
         background:Rectangle {
@@ -151,9 +164,6 @@ ApplicationWindow {
                 onClicked: optionsMenu.open()
 
                 Menu {
-                    Material.background: darkMode ? solarizedBase02 : solarizedBase2
-                    Material.foreground: darkMode ? solarizedBase2 : solarizedBase02
-
                     id: optionsMenu
                     y: parent.height
 
@@ -167,8 +177,10 @@ ApplicationWindow {
                         icon.source: (appWnd.darkMode) ?  "qrc:/qt/qml/assets/images/sun.png" :"qrc:/qt/qml/assets/images/moon.png"
                         text:(appWnd.darkMode) ? qsTr("Дневной") :qsTr("Ночной")
                         onTriggered: {
+
                             console.log(`Выбран режим:${themeModeMenu.text}`)
                             appWnd.darkMode = ! appWnd.darkMode
+
                         }
                     }
                     MenuItem {
@@ -184,12 +196,22 @@ ApplicationWindow {
                         text: qsTr("О программе")
                         onTriggered: console.log("О программе выбрано")
                     }
+                    Component.onCompleted: {
+                        console.log(`Menu.Material.listHighlightColor ${optionsMenu.Material.listHighlightColor}`)
+                    }
                 }
             }
         }
     }
 
     ColumnLayout {
+        Material.theme: appWnd.Material.theme
+        Material.background: darkMode ? solarizedBase02 : solarizedBase2
+        Material.foreground: darkMode ? solarizedBase0 : solarizedBase00
+        Material.elevation: 2
+        Material.accent: solarizedOrange
+        Material.primary: solarizedYellow
+
         id: mainColumnLayout
         anchors{
             fill: parent
@@ -202,10 +224,6 @@ ApplicationWindow {
         Pane{
             Layout.fillWidth: true
             Layout.preferredHeight: 72
-
-            Material.background: darkMode ? solarizedBase02 : solarizedBase2
-            Material.foreground: darkMode ? solarizedBase2 : solarizedBase02
-            Material.elevation: 2
             padding: 0
             background: Rectangle {
                 color: Material.backgroundColor
@@ -220,12 +238,15 @@ ApplicationWindow {
                     Layout.preferredWidth: 64
                     Layout.preferredHeight: 48
                     Layout.leftMargin: baseSpacing
+
                     width: 64
                     height: 48
                     source:(isEURegion) ? "qrc:/qt/qml/assets/images/flags/eu.svg": "qrc:/qt/qml/assets/images/flags/ru.svg"
-                    fillMode: Image.PreserveAspectFit
+                    fillMode: Image.PreserveAspectCrop
                     smooth: true
+                    clip:true
                 }
+
                 Label {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.preferredHeight: 48
@@ -253,9 +274,6 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            Material.background: darkMode ? solarizedBase02 : solarizedBase2
-            Material.foreground: darkMode ? solarizedBase2 : solarizedBase02
-            Material.elevation: 2
             padding: 0
             background: Rectangle {
                 color: Material.backgroundColor
@@ -266,41 +284,56 @@ ApplicationWindow {
                 id:mainPaneColumnLayout
                 anchors.fill: parent
                 spacing: baseSpacing
-
                 ListView {
+                    id: listView
                     Layout.fillWidth: true
                     Layout.fillHeight: true
 
-                    model: ListModel {
-                        ListElement { title: "Bluetooth"; subtitle: "On" }
-                        ListElement { title: "Wi-Fi"; subtitle: "Connected" }
-                        ListElement { title: "Battery"; subtitle: "85%" }
-                    }
+                    clip: true
+                    focus: true // Required for arrow keys to work
+                    keyNavigationWraps: true // Allows looping from end to start
 
-                    // Use ItemDelegate for built-in Material behavior
-                    delegate: ItemDelegate {
-                        width: parent.width
-                        text: model.title
+                    model: [
+                        { status: "ok",  text: "mtproxy.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                        { status: "ok",  text: "mtproxy1.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                        { status: "ok",  text: "mtproxy2.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                        { status: "ok",  text: "mtproxy3.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                        { status: "bad", text: "mtproxy3.prn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                        { status: "ok",  text: "mtproxy.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                        { status: "ok",  text: "mtproxy1.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                        { status: "ok",  text: "mtproxy2.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                        { status: "ok",  text: "mtproxy3.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                        { status: "ok",  text: "mtproxy1.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                        { status: "ok",  text: "mtproxy2.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                        { status: "ok",  text: "mtproxy3.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                        { status: "ok",  text: "mtproxy1.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                        { status: "ok",  text: "mtproxy2.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                        { status: "ok",  text: "mtproxy3.rkn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" },
+                        { status: "bad", text: "mtproxy3.prn.ru", mtproxyurl:"https://t.me/server=1.1.1.1&port=483&secret=dmshfhdashfejwr3ur104033" }
 
-                        // Optional: Adding a subtitle for a detailed list item
-                        contentItem: Column {
-                            spacing: 2
-                            Text {
-                                text: model.title
-                                font: parent.parent.font
-                                color: Material.foreground
-                            }
-                            Text {
-                                text: model.subtitle
-                                font.pixelSize: 12
-                                color: "gray"
-                            }
+                    ]
+                    highlight: Rectangle {
+
+                        color: Material.listHighlightColor
+                        radius: 8
+                        // Standard Behavior can be used for custom easing
+                        Behavior on y {
+                            SpringAnimation { spring: 3; damping: 0.2 }
                         }
-
-                        onClicked: console.log("Clicked:", model.title)
                     }
 
-                    ScrollIndicator.vertical: ScrollIndicator { }
+                    delegate: MItemDelegate {
+                        required property int index
+                        width: ListView.view.width
+                        hoverEnabled: false
+                        text:qsTr("Title %1").arg(index + 1)
+
+                        icon.source:"qrc:/qt/qml/assets/images/ok.png"
+                        highlighted: ListView.isCurrentItem
+                        onClicked: listView.currentIndex = index
+
+                    }
+                    // Component.onCompleted: currentIndex = 0
                 }
                 Text {
                     id:appVerTxt
@@ -324,8 +357,63 @@ ApplicationWindow {
                 }
             }
         }
-    }
+        Pane{
+            Layout.fillWidth: true
+            Layout.preferredHeight: 72
+            padding: 0
+            background: Rectangle {
+                color: Material.backgroundColor
+                radius: 8
+                border.width: 0
+            }
+            RowLayout {
+                anchors.fill: parent
+                spacing: baseSpacing
+                property bool  isOnline: false
+                property string text
 
+                Image{
+                    Layout.alignment: Qt.AlignCenter
+                    Layout.preferredWidth: 48
+                    Layout.preferredHeight: 48
+                    Layout.leftMargin: baseSpacing
+
+                    width: 48
+                    height: 48
+                    source:(isOnLine) ? "qrc:/qt/qml/assets/images/online.png": "qrc:/qt/qml/assets/images/offline.png"
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    clip:true
+                }
+
+                Label {
+                    id:labelURL
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredHeight: 48
+                    Layout.fillWidth: true
+                    text: parent.text
+                    font{
+                        family: appWnd.droidFont.name
+                        pixelSize: 16
+                        bold:true
+                    }
+
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignLeft
+                }
+                ToolButton {
+                    Layout.alignment: Qt.AlignRight | Qt.AlignHCenter
+                    Layout.preferredHeight: 48
+
+                    icon.name: "add-telegram"
+                    icon.source: "qrc:/qt/qml/assets/images/more_vert.png"
+
+                    onClicked: optionsMenu.open()
+                }
+
+            }
+        }
+    }
 
     Component.onCompleted: {
         if  (appWnd.isDebugMode){
@@ -354,22 +442,22 @@ ApplicationWindow {
             duration: 2000
             easing.type: Easing.Linear
         }
-        PauseAnimation {
-            duration: 1000
-        }
-        NumberAnimation {
-            targets: [appVerTxt]
-            properties: "opacity"
-            from: 0.8
-            to: 0
-            duration: 2000
-            easing.type: Easing.Linear
-        }
-        PropertyAction {
-            targets: [appVerTxt]
-            property: "visible"
-            value: false
-        }
+        // PauseAnimation {
+        //     duration: 1000
+        // }
+        // NumberAnimation {
+        //     targets: [appVerTxt]
+        //     properties: "opacity"
+        //     from: 0.8
+        //     to: 0
+        //     duration: 2000
+        //     easing.type: Easing.Linear
+        // }
+        // PropertyAction {
+        //     targets: [appVerTxt]
+        //     property: "visible"
+        //     value: false
+        // }
 
     }
 }
