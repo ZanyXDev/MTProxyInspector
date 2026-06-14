@@ -106,42 +106,18 @@ ApplicationWindow {
   */
     width: 360
     height: 720
-    // Use Screen  margins to ensure text or buttons don't clip into camera cutouts
-    leftPadding: screenAvailableWidth - width > 0 ? 0 : 10
-    topPadding: screenAvailableHeight -height > 0? 0: 20
 
     // ----- Then comes the other properties. There's no predefined order to these.
     visible: true
     visibility: (isMobile) ? Window.FullScreen : Window.Windowed
-    flags: Qt.Window | Qt.ExpandedClientAreaHint
-
+    flags: Qt.Window | Qt.ExpandedClientAreaHint | Qt.NoTitleBarBackgroundHi>
     // ----- Qt provided visual children
 
 
-    ColumnLayout {
-        id: mainColumnLayout
-        Material.theme: appWnd.Material.theme
-        Material.elevation: 2
-        anchors.centerIn: parent
-        anchors{
-            fill: parent
-            margins: padding /2
-            leftMargin: 2
-            rightMargin: 8
-            topMargin: 8
-            bottomMargin: 10
-        }
-
-        spacing: baseSpacing
-
-        Pane {
-            id: headerPane
-            Layout.fillWidth: true
+    header: ToolBar{
             background: Rectangle {
                 color: Material.backgroundColor
-                //radius: appWnd.m_radius
-                // border.width: 1
-                // border.color: Material.frameColor
+		opacity: 0.7
             }
             RowLayout {
                 spacing: baseSpacing
@@ -172,9 +148,7 @@ ApplicationWindow {
                 ToolButton {
                     Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                     // Иконка "три точки" (вертикальные)
-
                     icon.source: "qrc:/qt/qml/assets/images/more_vert.png"
-
                     onClicked: optionsMenu.open()
 
                     Menu {
@@ -218,8 +192,26 @@ ApplicationWindow {
                     }
                 }
             }
+    }
+ topPadding: 0
 
+
+    ColumnLayout {
+        id: mainColumnLayout
+        Material.theme: appWnd.Material.theme
+        Material.elevation: 2
+        anchors.centerIn: parent
+        anchors{
+            fill: parent
+            margins: padding /2
+            leftMargin: 2
+            rightMargin: 8
+            topMargin: 8
+            bottomMargin: 10
         }
+
+        spacing: baseSpacing
+
         Pane {
             id: sourceSelectorPane
             Layout.fillWidth: true
