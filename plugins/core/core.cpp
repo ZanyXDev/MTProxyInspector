@@ -1,4 +1,7 @@
 #include <QDebug>
+#include <QString>
+#include <QUrl>
+#include <QUrlQuery>
 
 #include "core.h"
 #include "itester.h"
@@ -31,39 +34,40 @@ Core::Core(QObject *parent)
         m_boardModel->setItem(r, 0, item);
     }
 #endif
+
     if (QNetworkInformation::instance()) {
+
         // Check if the device has internet reachability
-        bool isOnline = QNetworkInformation::instance()->reachability() >= QNetworkInformation::Reachability::Online;
-
-        // Get transport medium (e.g., Cellular, WiFi, Ethernet)
-        QNetworkInformation::TransportMedium medium = QNetworkInformation::instance()->transportMedium();
-        qDebug() << "Is Online:" << isOnline << "Medium:" << static_cast<int>(medium);
-
         connect(QNetworkInformation::instance(), &QNetworkInformation::reachabilityChanged,
                 this, [this](QNetworkInformation::Reachability reachability) {
-                    bool l_success = false;
-                    QString l_message = QString();
-                    QString l_errorType = QString();
+                   bool state = false;
+                    QString l_message = QString();                   
 
                     switch (reachability) {
                     case QNetworkInformation::Reachability::Online:
-                        l_message = tr("Device is online!");
-                        l_success = true;
+                        l_message = tr("Устройство онлайн!");
+                        state = true;
                         break;
                     case QNetworkInformation::Reachability::Disconnected:
-                        l_message = tr("Device is disconnected!");
+                        l_message = tr("Устройство офлайн!");
                         break;
                     case QNetworkInformation::Reachability::Local:;
-                        l_message = tr("Local");
+                        l_message = tr("Устройство подключено к локальной сети, без доступа в Интернет!");
                         break;
                     case QNetworkInformation::Reachability::Site:;
-                        l_message = tr("Site");
+                        l_message =  tr("Устройство подключено к интранет сети, без доступа в Интернет!");
                         break;
                     default:
                         qDebug() << "Reachability changed to partial state.";
                         break;
                     }
-                    emit currentStatusChanged(l_success, l_message );
+
+                    if (state != m_onlineState){
+                        m_onlineState = state;
+                        emit onlineStateChanged();
+                    }
+
+                    emit showToastMessage(l_message );    
                 });
     }
 }
@@ -93,7 +97,35 @@ void Core::onReplyFinished(QNetworkReply *reply)
 
 }
 
+QString Core::convertToTlgFormat(const QString &urlString) const
+{
+    QUrl url(urlString);
+
+    if (url.scheme() == "https" && url.host() == "t.me") {
+        QString path = url.path();
+        QUrlQuery query(url);
+
+        if (path == "/proxy") {
+            QString tgUrl = "tg://proxy?" + query.toString();
+            return tgUrl;
+        }
+        else if (path == "/socks") {
+            QString tgUrl = "tg://socks?" + query.toString();
+            return tgUrl;
+        }
+    }
+
+    return urlString;
+}
+
+
+
 void Core::fetchProxyList(const QString &url)
 {
 
+}
+
+bool Core::onlineState() const
+{
+    return m_onlineState;
 }
