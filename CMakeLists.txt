@@ -118,6 +118,9 @@ if(CCACHE_PROGRAM)
 endif()
 
 # ----------------------------------------------------------------------------
+# Генерация compile_commands.json (если используете CMake)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+# ----------------------------------------------------------------------------
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick ShaderTools Network)
 qt_standard_project_setup(REQUIRES 6.10)
