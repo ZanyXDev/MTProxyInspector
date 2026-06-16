@@ -210,13 +210,12 @@ ApplicationWindow {
         anchors.rightMargin: 0
         opacity: 0.7
         RowLayout {
-            spacing: appWnd.baseSpacing
+            spacing: appWnd.baseSpacing /2
             anchors{
                 fill: parent
             }
             Item{
-
-                Layout.fillWidth: true
+                Layout.preferredWidth: 4
                 Layout.fillHeight: true
             }
             Label {
@@ -226,12 +225,10 @@ ApplicationWindow {
                 Layout.fillWidth: false
                 Layout.leftMargin: padding
 
-                text: qsTr("Источник MTProxy:")
+                text: qsTr("Источник:")
                 font{
                     family: appWnd.droidFont.name
                     pixelSize: 16
-                    bold:true
-
                 }
                 verticalAlignment: Text.AlignVCenter
                 horizontalAlignment: Text.AlignHCenter
@@ -247,15 +244,30 @@ ApplicationWindow {
                 font{
                     family: appWnd.droidFont.name
                     pixelSize: 16
-                    italic: true
+
                 }
                 verticalAlignment: Text.AlignVCenter
                 horizontalAlignment: Text.AlignHCenter
             }
             Item{
-
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+            }
+            Label {
+                id:appVerTxt
+                z: 1
+                Layout.alignment: Qt.AlignRight
+
+                opacity:0
+
+                text: qsTr("v.")+ appWnd.appVersion + " "
+                font{
+                    family: appWnd.digitalFont.name
+                    pixelSize: 11
+                    bold: true
+                }
+                verticalAlignment: Text.AlignVCenter |Qt.AlignVCenter
+                horizontalAlignment: Text.AlignHCenter
             }
         }
     }
@@ -288,18 +300,13 @@ ApplicationWindow {
         PauseAnimation {
             duration: 1000
         }
-        PropertyAction {
-            targets: [appVerTxt]
-            property: "visible"
-            value: true
-        }
         NumberAnimation {
             targets: [appVerTxt]
             properties: "opacity"
             from: 0
             to: 0.8
             duration: 1500
-            easing.type: Easing.Linear
+            easing.type: Easing.OutBounce
         }
 
     }
