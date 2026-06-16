@@ -198,7 +198,20 @@ ApplicationWindow {
     //     }
     // }
 
+
+    RoundButton{
+        implicitWidth: 56
+        implicitHeight: 56
+        text:"\u270E"
+        anchors{
+            bottom: footterToolBar.top
+            right: parent.right
+            margins: 16
+        }
+        Material.elevation: 6
+    }
     footer: ToolBar{
+        id:footterToolBar
         // 0..6 (рекомендуется 2..4 для футеров)
         Material.elevation: 3
 
