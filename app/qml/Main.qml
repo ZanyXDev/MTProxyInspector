@@ -68,6 +68,16 @@ ApplicationWindow {
     Material.primary:    isDark ? "#2aa198" : "#268bd2" // cyan   / blue
     Material.accent:     isDark ? "#cb4b16" : "#dc322f" // orange / red
 
+    readonly property color solarizedYellow: "#b58900"
+    readonly property color solarizedOrange: "#cb4b16"
+    readonly property color solarizedRed: "#dc322f"
+    readonly property color solarizedMagenta: "#d33682"
+    readonly property color solarizedViolet: "#6c71c4"
+    readonly property color solarizedBlue: "#268bd2"
+    readonly property color solarizedCyan: "#2aa198"
+    readonly property color solarizedGreen: "#859900"
+
+
     // ----- Signal declarations
 
     // ----- Size information
@@ -141,8 +151,8 @@ ApplicationWindow {
                     }
                     MenuItem {
                         id:themeModeMenu
-                        icon.source: (appWnd.darkMode) ?  "qrc:/qt/qml/assets/images/sun.png" :"qrc:/qt/qml/assets/images/moon.png"
-                        text:(appWnd.darkMode) ? qsTr("Дневной") :qsTr("Ночной")
+                        icon.source: (appWnd.isDark) ?  "qrc:/qt/qml/assets/images/sun.png" :"qrc:/qt/qml/assets/images/moon.png"
+                        text:(appWnd.isDark) ? qsTr("Дневной") :qsTr("Ночной")
                         onTriggered: {
 
                             console.log(`Выбран режим:${themeModeMenu.text}`)
@@ -177,38 +187,63 @@ ApplicationWindow {
     }
 
     topPadding: 0
-    // ListView {
-    //     id: listView
-    //     anchors.fill: parent
-    //     model: 10
-    //     delegate: Image {
-    //         required property int index
-    //         width: listView.width; height: 250
-    //         //source: "https://loremflickr.com/320/240?lock=" + (index + 1)
-    //         source: "qrc:/qt/qml/assets/images/about.png"
+    ListView {
+        id: listView
+        spacing: 16
+        anchors.fill: parent
+        // Тестовая модель
+        model: ListModel {
+            ListElement { domainName: "api.production.example.com"; ping:200;port:443;isFavorite:false }
+            ListElement { domainName: "db.replica-01.internal"; ping:200;port:443;isFavorite:false}
+            ListElement { domainName: "auth.staging.example.com"; ping:70;port:443;isFavorite:false }
+            ListElement { domainName: "api.production.test.com"; ping:200;port:443;isFavorite:false }
+            ListElement { domainName: "db.replica-01.ru"; ping:25;port:443;isFavorite:false}
+            ListElement { domainName: "auth.long-name.me.com"; ping:200;port:443;isFavorite:false }
+        }
 
-    //     }
+        delegate:MDelegate{
+            required property int index
+            Material.elevation: 2
+            // Явный фон обязателен для корректной отрисовки тени
+            Material.background: appWnd.Material.background
+            themeRed:appWnd.solarizedRed
+            themeGreen:appWnd.solarizedGreen
+            width: listView.width -16
 
-    //     topMargin: SafeArea.margins.top
+            font.family: appWnd.droidFont.name
+            //tg://proxy?server=87.248.129.102&port=8443&secret=ee1603010200010001fc030386e24c3add626973636f7474692e79656b74616e65742e636f6d
 
-    //     onTopMarginChanged: {
-    //         // Keep content position stable
-    //         if (!dragging && atYBeginning)
-    //             contentY = -topMargin
-    //     }
-    // }
+        }
+        // delegate: Image {
+        //     required property int index
+        //     width: listView.width; height: 250
+        //     //source: "https://loremflickr.com/320/240?lock=" + (index + 1)
+        //     source: "qrc:/qt/qml/assets/images/about.png"
+
+        // }
+
+        leftMargin: 8
+        topMargin: SafeArea.margins.top
+
+        onTopMarginChanged: {
+            // Keep content position stable
+            if (!dragging && atYBeginning)
+                contentY = -topMargin
+        }
+    }
 
 
     RoundButton{
         implicitWidth: 56
         implicitHeight: 56
-        text:"\u270E"
+        icon.source:  "qrc:/qt/qml/assets/images/cloud-refresh.png"
+        //icon.color:"transparent"
         anchors{
-            bottom: footterToolBar.top
+            bottom: parent.bottom
             right: parent.right
             margins: 16
         }
-        Material.elevation: 6
+        Material.elevation: 4
     }
     footer: ToolBar{
         id:footterToolBar
@@ -223,44 +258,9 @@ ApplicationWindow {
         anchors.rightMargin: 0
         opacity: 0.7
         RowLayout {
-            spacing: appWnd.baseSpacing /2
+            spacing: 0
             anchors{
                 fill: parent
-            }
-            Item{
-                Layout.preferredWidth: 4
-                Layout.fillHeight: true
-            }
-            Label {
-                id:navLabel
-                Layout.alignment: Qt.AlignVCenter |Qt.AlignLeft  // Вертикальное центрирование, смещен влево
-                Layout.fillHeight: true            // Заполнить высоту родителя
-                Layout.fillWidth: false
-                Layout.leftMargin: padding
-
-                text: qsTr("Источник:")
-                font{
-                    family: appWnd.droidFont.name
-                    pixelSize: 16
-                }
-                verticalAlignment: Text.AlignVCenter
-                horizontalAlignment: Text.AlignHCenter
-            }
-            Label {
-                id:srcTitleLabel
-                Layout.alignment: Qt.AlignVCenter  // Вертикальное центрирование
-                Layout.fillHeight: true            // Заполнить высоту родителя
-                Layout.fillWidth: false
-                Layout.leftMargin: padding
-
-                text: appWnd.sourceTitle
-                font{
-                    family: appWnd.droidFont.name
-                    pixelSize: 16
-
-                }
-                verticalAlignment: Text.AlignVCenter
-                horizontalAlignment: Text.AlignHCenter
             }
             Item{
                 Layout.fillWidth: true
@@ -318,6 +318,18 @@ ApplicationWindow {
             properties: "opacity"
             from: 0
             to: 0.8
+            duration: 1500
+            easing.type: Easing.OutBounce
+        }
+
+        PauseAnimation {
+            duration: 1000
+        }
+        NumberAnimation {
+            targets: [footterToolBar]
+            properties: "opacity"
+            from: 0.7
+            to: 0.4
             duration: 1500
             easing.type: Easing.OutBounce
         }

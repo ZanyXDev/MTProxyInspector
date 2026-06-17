@@ -76,41 +76,64 @@ ApplicationWindow {
     topPadding: 0
 
 
-    // Material Configuration for Solarized
-    Material.theme: Material.Light // Or Material.Dark
-    Material.primary: "#fdf6e3"    // Base3 (Background)
-    Material.accent: "#268bd2"     // Blue (Buttons, switches)
-    Material.foreground: "#586e75" // Base0 (Text, icons)
+    // Синхронизируем фон окна с Material.background
+    color: Material.background
 
-    // Override background color for native QML components
-    color: "#fdf6e3"
+    property bool isDark: true
 
-    Pane {
-        id: root
-        Material.background: appWnd.Material.background
-        width: parent.width -10
-        height:96
-        padding: 0
-        topPadding: 0
-        bottomPadding: 0
-        Material.elevation: 8 // Добавляем тень сверху, как в Material Design
-        background: Rectangle {
-            id:bgrRect
-            color: Material.backgroundColor
+    // 🔹 Базовая тема Material (влияет на ripple, скругления, тени, default-цвета)
+    Material.theme: isDark ? Material.Dark : Material.Light
 
-            border.width: 1
-            border.color: Material.frameColor
+    // 🔹 Solarized цвета через Material attached properties
+    Material.background: isDark ? "#002b36" : "#fdf6e3" // base03 / base3
+    Material.foreground: isDark ? "#839496" : "#657b83" // base0  / base00
+    Material.primary:    isDark ? "#2aa198" : "#268bd2" // cyan   / blue
+    Material.accent:     isDark ? "#cb4b16" : "#dc322f" // orange / red
+
+    ColumnLayout {
+        anchors.fill: parent
+        anchors.margins: 40
+        spacing: 16
+
+        Switch {
+            text: isDark ? "Solarized Dark" : "Solarized Light"
+            checked: isDark
+            onToggled: appWnd.isDark = checked
         }
-        // Контейнер для кнопок
-        Button {
-            text: "Solarized Action"
-            anchors.centerIn: parent
 
-            // Elevation example
-            Material.elevation: 6
+        TextField {
+            placeholderText: "Foreground & background наследуются автоматически"
+            Layout.fillWidth: true
+        }
+
+        RowLayout {
+            Button {
+                text: "Primary"
+                highlighted: true
+                // В Material highlighted Button берет Material.primary
+            }
+            Button {
+                text: "Accent"
+                // Accent-кнопки в Material стиле используют Material.accent
+            }
+            Item { Layout.fillWidth: true }
+        }
+
+        Pane {
+            Layout.fillWidth: true; Layout.fillHeight: true
+            Material.elevation: 3
+            Material.background: appWnd.Material.background // Явное указание для Pane
+
+            Label {
+                anchors.centerIn: parent
+                text: "Pane with elevation 3\nText uses Material.foreground"
+                color: Material.foreground
+                horizontalAlignment: Text.AlignHCenter
+            }
         }
     }
- footer:  Pane {
+
+    footer:  Pane {
         id: myPane
 
         Material.elevation: 16

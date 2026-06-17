@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
     initialProperties["buildQtVersion"] = QVariant::fromValue(buildQtVersion);
 
     engine.setInitialProperties(initialProperties);
-#ifdef QT_DEBUG
+#ifdef QT_DEBUG1
     engine.loadFromModule("io.github.zanyxdev.mtproxyinspector", "MainTest");
 #else
     engine.loadFromModule("io.github.zanyxdev.mtproxyinspector", "Main");
