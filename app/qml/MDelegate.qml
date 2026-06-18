@@ -19,8 +19,12 @@ ItemDelegate {
 
     Material.roundedScale: Material.MediumScale
     contentItem: ColumnLayout {
-        spacing: 0
+        spacing: 8
         anchors.fill: parent
+        Item{
+            Layout.fillWidth: true
+            Layout.preferredHeight: 1
+        }
         Label {
             Layout.fillWidth: true
             Layout.leftMargin: 16
