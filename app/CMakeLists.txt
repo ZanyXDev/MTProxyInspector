@@ -46,6 +46,14 @@ qt_add_resources(${APP_NAME} "images"
     ../assets/images/flags/eu.svg
     ../assets/images/flags/ru.svg
     ../assets/images/ok.png
+    ../assets/images/like.png
+    ../assets/images/like@2x.png
+    ../assets/images/like@3x.png
+    ../assets/images/like@4x.png
+    ../assets/images/share.png
+    ../assets/images/share@2x.png
+    ../assets/images/share@3x.png
+    ../assets/images/share@4x.png
 )
 
 qt_add_resources(${APP_NAME} "fonts"
