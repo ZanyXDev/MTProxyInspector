@@ -193,12 +193,54 @@ ApplicationWindow {
         anchors.fill: parent
         // Тестовая модель
         model: ListModel {
-            ListElement { domainName: "api.production.example.com"; ping:200;mtype:1;port:443;isFavorite:false }
-            ListElement { domainName: "db.replica-01.internal"; ping:200;mtype:2;port:443;isFavorite:false}
-            ListElement { domainName: "auth.staging.example.com"; ping:70;mtype:2;port:443;isFavorite:false }
-            ListElement { domainName: "api.production.test.com"; ping:200;mtype:2;port:443;isFavorite:true }
-            ListElement { domainName: "db.replica-01.ru"; ping:25;port:443;mtype:3;isFavorite:false}
-            ListElement { domainName: "auth.long-long-long-long-name.me.com"; ping:200;mtype:3;port:443;isFavorite:false }
+            ListElement {
+                domainName: "api.production.example.com";
+                ping:200;
+                mtype:1;
+                port:443;
+                isFavorite:false;
+                secret:"ee1603010200010001fc030386e24c3add626973636f7474692e79656b74616e65742e636f6d"
+            }
+            ListElement {
+                domainName: "db.replica-01.internal";
+                ping:200;
+                mtype:2;
+                port:443;
+                isFavorite:false;
+                secret:"ee1603010200010001fc030386e24c3add626973636f7474692e79656b74616e65742e636f6d"
+            }
+            ListElement {
+                domainName: "auth.staging.example.com";
+                ping:70;
+                mtype:99;
+                port:443;
+                isFavorite:false;
+                secret:"ee1603010200010001fc030386e24c3add626973636f7474692e79656b74616e65742e636f6d"
+            }
+            ListElement {
+                domainName: "api.production.test.com";
+                ping:200;
+                mtype:2;
+                port:443;
+                isFavorite:true;
+                secret:"ee1603010200010001fc030386e24c3add626973636f7474692e79656b74616e65742e636f6d"
+            }
+            ListElement {
+                domainName: "db.replica-01.ru";
+                ping:25;
+                port:443;
+                mtype:3;
+                isFavorite:false;
+                secret:"ee1603010200010001fc030386e24c3add626973636f7474692e79656b74616e65742e636f6d"
+            }
+            ListElement {
+                domainName: "auth.long-long-long-long-name.me.com";
+                ping:200;
+                mtype:3;
+                port:443;
+                isFavorite:false;
+                secret:"ee1603010200010001fc030386e24c3add626973636f7474692e79656b74616e65742e636f6d"
+            }
         }
 
 
