@@ -243,7 +243,6 @@ ApplicationWindow {
             }
         }
 
-
         delegate:MDelegate{
             required property int index
             Material.elevation: 2
@@ -257,22 +256,33 @@ ApplicationWindow {
             //tg://proxy?server=87.248.129.102&port=8443&secret=ee1603010200010001fc030386e24c3add626973636f7474692e79656b74616e65742e636f6d
 
         }
-        //delegate: Image {
-        //     required property int index
-        //     width: listView.width; height: 250
-        //     //source: "https://loremflickr.com/320/240?lock=" + (index + 1)
-        //     source: "qrc:/qt/qml/assets/images/about.png"
-
-        // }
 
         leftMargin: 8
         topMargin: SafeArea.margins.top
 
+        onDragStarted: {
+            console.log("onDragStarted called");
+            busyIndicator.visible = true
+        }
+        onDragEnded:{
+            console.log("onDragEnded called");
+            busyIndicator.visible = false
+        }
+
         onTopMarginChanged: {
+
             // Keep content position stable
             if (!dragging && atYBeginning)
                 contentY = -topMargin
         }
+
+    }
+    // BusyIndicator
+    BusyIndicator {
+        id: busyIndicator
+        anchors.centerIn: parent
+        visible: false
+        running: visible
     }
 
 
@@ -326,15 +336,6 @@ ApplicationWindow {
                 horizontalAlignment: Text.AlignHCenter
             }
         }
-    }
-
-
-    // BusyIndicator
-    BusyIndicator {
-        id: busyIndicator
-        anchors.centerIn: parent
-        visible: false
-        running: visible
     }
 
     Component.onCompleted: {
