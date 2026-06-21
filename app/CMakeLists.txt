@@ -54,6 +54,10 @@ qt_add_resources(${APP_NAME} "images"
     ../assets/images/share@2x.png
     ../assets/images/share@3x.png
     ../assets/images/share@4x.png
+    ../assets/images/link.png
+    ../assets/images/link@2x.png
+    ../assets/images/link@3x.png
+    ../assets/images/link@4x.png
 )
 
 qt_add_resources(${APP_NAME} "fonts"

@@ -143,7 +143,11 @@ ApplicationWindow {
                 Menu {
                     id: optionsMenu
                     y: parent.height
-
+                    MenuItem {
+                        icon.source: "qrc:/qt/qml/assets/images/link.png"
+                        text: qsTr("Адреса источников")
+                        onTriggered: console.log("Адреса источников выбраны")
+                    }
                     MenuItem {
                         icon.source: "qrc:/qt/qml/assets/images/settings.png"
                         text: qsTr("Настройки")
@@ -160,6 +164,8 @@ ApplicationWindow {
 
                         }
                     }
+                    MenuSeparator{
+                    }
                     MenuItem {
                         icon.source: "qrc:/qt/qml/assets/images/question-mark.png"
                         text: qsTr("Справка")
@@ -167,8 +173,7 @@ ApplicationWindow {
                             console.log("Справка выбрано")
                         }
                     }
-                    MenuSeparator{
-                    }
+
                     MenuItem {
                         icon.source: "qrc:/qt/qml/assets/images/about.png"
                         //icon.color: "transparent" // Set to transparent to use original icon colors
