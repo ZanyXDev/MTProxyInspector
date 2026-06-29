@@ -56,8 +56,8 @@ message(STATUS "✓ App version code: ${APP_VERSION_CODE}")
 project(${APP_NAME} VERSION ${APP_VERSION} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(CMAKE_CXX_STANDARD 17)
-set(QT_QML_GENERATE_QMLLS_INI ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # --------- Чтобы qmllint и QtCreator находили модуль при разработке ---------
@@ -65,6 +65,12 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 # https://forum.qt.io/topic/146086/usage-of-import_path-in-qt_add_qml_module/4
 set(QT_QML_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/qt/qml")
 set(QML_IMPORT_PATH ${QT_QML_OUTPUT_DIRECTORY} CACHE STRING "Import paths for Qt Creator's code model" FORCE)
+# ----------------------------------------------------------------------------
+# Setting QT_QML_GENERATE_QMLLS_INI to ON tells CMake to generate .qmlls.ini
+# files for the QML Language Server (QMLLS).
+# This allows your IDE (like Qt Creator or Neovim) to locate your build folder,
+# enabling C++-to-QML autocompletion and hover documentation.
+set(QT_QML_GENERATE_QMLLS_INI ON)
 # ----------------------------------------------------------------------------
 
 # ------------------------- tune speed build ----------------------------------
