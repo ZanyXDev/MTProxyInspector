@@ -1,3 +1,5 @@
+#pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Material
@@ -13,7 +15,7 @@ ApplicationWindow {
     // ----- Property Declarations
     // Required properties should be at the top.
     readonly property int screenOrientation: Qt.PortraitOrientation
-    property bool isConnected: Core.onlineState
+    //property bool isConnected: Core.onlineState
     property var screenWidth: Screen.width
     property var screenHeight: Screen.height
     property var screenAvailableWidth: Screen.desktopAvailableWidth
@@ -395,10 +397,10 @@ ApplicationWindow {
     Connections {
         target: Core
 
-        function onProxyUrlListChanged() {
-            console.log("Proxy URL list изменился:", Core.proxyUrlList)
-            AndroidUtils.showToast(qsTr("Proxy URL list изменился!"), false)
-        }
+        // function onProxyUrlListChanged() {
+        //     console.log("Proxy URL list изменился:", Core.proxyUrlList)
+        //     AndroidUtils.showToast(qsTr("Proxy URL list изменился!"), false)
+        // }
 
         function onShowToastMessage( message){
             AndroidUtils.showToast(message, false)

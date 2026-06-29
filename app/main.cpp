@@ -47,7 +47,8 @@ static void scanDirectoryPaths(const QString& path, QStringList& paths) {
 int main(int argc, char *argv[])
 {
     QCoreApplication::setOrganizationName(PACKAGE_NAME_STR);
-    QCoreApplication::setApplicationName(ACTIVITY_NAME_STR);    QCoreApplication::setApplicationVersion(VERSION_STR);
+    QCoreApplication::setApplicationName(ACTIVITY_NAME_STR);
+    QCoreApplication::setApplicationVersion(VERSION_STR);
     QGuiApplication app(argc, argv);
 
 #ifdef QT_DEBUG
