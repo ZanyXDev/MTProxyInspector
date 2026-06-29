@@ -28,10 +28,10 @@ ApplicationWindow {
     // Свойство-флаг для режима отладки
     property bool isDebugMode: false
 
+    property bool isDark: true
 
     ///TODO add load/save in app Settings
     // Theme selection
-    property bool darkMode: true
     property real  baseSpacing: 8
     property real  padding: 16
     property real  m_radius: 12
@@ -53,29 +53,20 @@ ApplicationWindow {
         source: "qrc:/qt/qml/assets/fonts/nasalization-rg.otf"
     }
 
+    property string sourceTitle:qsTr("Не выбран")
+
     // -------------------- Глобальные стиль --------------------------------
+    // Синхронизируем фон окна с Material.background
+    color: Material.background
 
-    // Solarized color palette
-    // Dark theme
-    readonly property color solarizedBase3: "#fdf6e3"
-    readonly property color solarizedBase2: "#eee8d5"
+    // 🔹 Базовая тема Material (влияет на ripple, скругления, тени, default-цвета)
+    Material.theme: isDark ? Material.Dark : Material.Light
 
-    readonly property color solarizedBase1: "#93a1a1" // опционально подчеркнутый
-    readonly property color solarizedBase0: "#839496" // primary content основной текст
-    readonly property color solarizedBase00: "#657b83"
-    readonly property color solarizedBase01: "#586e75"// secondary content коментарии
-    readonly property color solarizedBase02: "#073642"// background highlights
-    readonly property color solarizedBase03: "#002b36"// background
-
-    // Ligth theme
-    // solarizedBase03
-    // solarizedBase02
-    // solarizedBase01 // опционально подчеркнутый
-    // solarizedBase00 // primary content основной текст
-    // solarizedBase0
-    // solarizedBase1 // secondary content коментарии
-    // solarizedBase2 // background highlights
-    // solarizedBase3 // background
+    // 🔹 Solarized цвета через Material attached properties
+    Material.background: isDark ? "#002b36" : "#fdf6e3" // base03 / base3
+    Material.foreground: isDark ? "#839496" : "#657b83" // base0  / base00
+    Material.primary:    isDark ? "#2aa198" : "#268bd2" // cyan   / blue
+    Material.accent:     isDark ? "#cb4b16" : "#dc322f" // orange / red
 
     readonly property color solarizedYellow: "#b58900"
     readonly property color solarizedOrange: "#cb4b16"
@@ -85,15 +76,7 @@ ApplicationWindow {
     readonly property color solarizedBlue: "#268bd2"
     readonly property color solarizedCyan: "#2aa198"
     readonly property color solarizedGreen: "#859900"
-    readonly property color hightlightcolor: "#1e000000"
 
-    Material.theme: darkMode ? Material.Dark : Material.Light
-    Material.background: darkMode ? solarizedBase03 : solarizedBase3
-    Material.foreground: darkMode ? solarizedBase0 : solarizedBase00
-    Material.accent: solarizedOrange
-    Material.primary: solarizedYellow
-
-    Material.elevation : 2
 
     // ----- Signal declarations
 
@@ -115,12 +98,16 @@ ApplicationWindow {
 
 
     header: ToolBar{
-        background: Rectangle {
-            //компонент ToolBar принудительно устанавливает свой собственный цвет фона равным Material.primary.
-            // поэтому переопределяем его
-            color: appWnd.Material.background
-            opacity: 0.7
-        }
+        // 0..6 (рекомендуется 2..4 для футеров)
+        Material.elevation: 3
+
+        // Явный фон обязателен для корректной отрисовки тени
+        Material.background: appWnd.Material.background
+
+        // Чтобы левая/правая тень не обрезалась краями окна
+        anchors.leftMargin: 0
+        anchors.rightMargin: 0
+        opacity: 0.7
         RowLayout {
             spacing: appWnd.baseSpacing
             anchors{
@@ -156,7 +143,11 @@ ApplicationWindow {
                 Menu {
                     id: optionsMenu
                     y: parent.height
-
+                    MenuItem {
+                        icon.source: "qrc:/qt/qml/assets/images/link.png"
+                        text: qsTr("Адреса источников")
+                        onTriggered: console.log("Адреса источников выбраны")
+                    }
                     MenuItem {
                         icon.source: "qrc:/qt/qml/assets/images/settings.png"
                         text: qsTr("Настройки")
@@ -164,14 +155,16 @@ ApplicationWindow {
                     }
                     MenuItem {
                         id:themeModeMenu
-                        icon.source: (appWnd.darkMode) ?  "qrc:/qt/qml/assets/images/sun.png" :"qrc:/qt/qml/assets/images/moon.png"
-                        text:(appWnd.darkMode) ? qsTr("Дневной") :qsTr("Ночной")
+                        icon.source: (appWnd.isDark) ?  "qrc:/qt/qml/assets/images/sun.png" :"qrc:/qt/qml/assets/images/moon.png"
+                        text:(appWnd.isDark) ? qsTr("Дневной") :qsTr("Ночной")
                         onTriggered: {
 
                             console.log(`Выбран режим:${themeModeMenu.text}`)
-                            appWnd.darkMode = ! appWnd.darkMode
+                            appWnd.isDark = ! appWnd.isDark
 
                         }
+                    }
+                    MenuSeparator{
                     }
                     MenuItem {
                         icon.source: "qrc:/qt/qml/assets/images/question-mark.png"
@@ -180,8 +173,7 @@ ApplicationWindow {
                             console.log("Справка выбрано")
                         }
                     }
-                    MenuSeparator{
-                    }
+
                     MenuItem {
                         icon.source: "qrc:/qt/qml/assets/images/about.png"
                         //icon.color: "transparent" // Set to transparent to use original icon colors
@@ -198,20 +190,157 @@ ApplicationWindow {
             console.log(`ToolBar.background.rectangle.color:${Material.backgroundColor}`)
         }
     }
-    topPadding: 0
-    footer: NavigationPane{
 
-        // Явно задаем цвет фона окна, чтобы избежать дефолтного поведения Material
-        Material.background: appWnd.Material.background
+    topPadding: 0
+    ListView {
+        id: listView
+        spacing: 16
+        anchors.fill: parent
+        // Тестовая модель
+        model: ListModel {
+            ListElement {
+                domainName: "api.production.example.com";
+                ping:200;
+                mtype:1;
+                port:443;
+                isFavorite:false;
+                secret:"ee1603010200010001fc030386e24c3add626973636f7474692e79656b74616e65742e636f6d"
+            }
+            ListElement {
+                domainName: "db.replica-01.internal";
+                ping:200;
+                mtype:2;
+                port:443;
+                isFavorite:false;
+                secret:"ee1603010200010001fc030386e24c3add626973636f7474692e79656b74616e65742e636f6d"
+            }
+            ListElement {
+                domainName: "auth.staging.example.com";
+                ping:70;
+                mtype:99;
+                port:443;
+                isFavorite:false;
+                secret:"ee1603010200010001fc030386e24c3add626973636f7474692e79656b74616e65742e636f6d"
+            }
+            ListElement {
+                domainName: "api.production.test.com";
+                ping:200;
+                mtype:2;
+                port:443;
+                isFavorite:true;
+                secret:"ee1603010200010001fc030386e24c3add626973636f7474692e79656b74616e65742e636f6d"
+            }
+            ListElement {
+                domainName: "db.replica-01.ru";
+                ping:25;
+                port:443;
+                mtype:3;
+                isFavorite:false;
+                secret:"ee1603010200010001fc030386e24c3add626973636f7474692e79656b74616e65742e636f6d"
+            }
+            ListElement {
+                domainName: "auth.long-long-long-long-name.me.com";
+                ping:200;
+                mtype:3;
+                port:443;
+                isFavorite:false;
+                secret:"ee1603010200010001fc030386e24c3add626973636f7474692e79656b74616e65742e636f6d"
+            }
+        }
+
+        delegate:MDelegate{
+            required property int index
+            Material.elevation: 2
+            // Явный фон обязателен для корректной отрисовки тени
+            Material.background: appWnd.Material.background
+            themeRed:appWnd.solarizedRed
+            themeGreen:appWnd.solarizedGreen
+            width: listView.width -16
+
+            font.family: appWnd.droidFont.name
+            //tg://proxy?server=87.248.129.102&port=8443&secret=ee1603010200010001fc030386e24c3add626973636f7474692e79656b74616e65742e636f6d
+
+        }
+
+        leftMargin: 8
+        topMargin: SafeArea.margins.top
+
+        onDragStarted: {
+            console.log("onDragStarted called");
+            busyIndicator.visible = true
+        }
+        onDragEnded:{
+            console.log("onDragEnded called");
+            busyIndicator.visible = false
+        }
+
+        onTopMarginChanged: {
+
+            // Keep content position stable
+            if (!dragging && atYBeginning)
+                contentY = -topMargin
+        }
 
     }
-
     // BusyIndicator
     BusyIndicator {
         id: busyIndicator
         anchors.centerIn: parent
         visible: false
         running: visible
+    }
+
+
+    RoundButton{
+        implicitWidth: 56
+        implicitHeight: 56
+        icon.source:  "qrc:/qt/qml/assets/images/cloud-refresh.png"
+        //icon.color:"transparent"
+        anchors{
+            bottom: parent.bottom
+            right: parent.right
+            margins: 16
+        }
+        Material.elevation: 4
+    }
+    footer: ToolBar{
+        id:footterToolBar
+        // 0..6 (рекомендуется 2..4 для футеров)
+        Material.elevation: 3
+
+        // Явный фон обязателен для корректной отрисовки тени
+        Material.background: appWnd.Material.background
+
+        // Чтобы левая/правая тень не обрезалась краями окна
+        anchors.leftMargin: 0
+        anchors.rightMargin: 0
+        opacity: 0.7
+        RowLayout {
+            spacing: 0
+            anchors{
+                fill: parent
+            }
+            Item{
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+            Label {
+                id:appVerTxt
+                z: 1
+                Layout.alignment: Qt.AlignRight
+
+                opacity:0
+
+                text: qsTr("v.")+ appWnd.appVersion + " "
+                font{
+                    family: appWnd.digitalFont.name
+                    pixelSize: 11
+                    bold: true
+                }
+                verticalAlignment: Text.AlignVCenter |Qt.AlignVCenter
+                horizontalAlignment: Text.AlignHCenter
+            }
+        }
     }
 
     Component.onCompleted: {
@@ -233,18 +362,25 @@ ApplicationWindow {
         PauseAnimation {
             duration: 1000
         }
-        PropertyAction {
-            targets: [appVerTxt]
-            property: "visible"
-            value: true
-        }
         NumberAnimation {
             targets: [appVerTxt]
             properties: "opacity"
             from: 0
             to: 0.8
             duration: 1500
-            easing.type: Easing.Linear
+            easing.type: Easing.OutBounce
+        }
+
+        PauseAnimation {
+            duration: 1000
+        }
+        NumberAnimation {
+            targets: [footterToolBar]
+            properties: "opacity"
+            from: 0.7
+            to: 0.4
+            duration: 1500
+            easing.type: Easing.OutBounce
         }
 
     }

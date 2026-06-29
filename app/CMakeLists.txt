@@ -46,6 +46,18 @@ qt_add_resources(${APP_NAME} "images"
     ../assets/images/flags/eu.svg
     ../assets/images/flags/ru.svg
     ../assets/images/ok.png
+    ../assets/images/like.png
+    ../assets/images/like@2x.png
+    ../assets/images/like@3x.png
+    ../assets/images/like@4x.png
+    ../assets/images/share.png
+    ../assets/images/share@2x.png
+    ../assets/images/share@3x.png
+    ../assets/images/share@4x.png
+    ../assets/images/link.png
+    ../assets/images/link@2x.png
+    ../assets/images/link@3x.png
+    ../assets/images/link@4x.png
 )
 
 qt_add_resources(${APP_NAME} "fonts"
@@ -61,18 +73,14 @@ qt_add_resources(${APP_NAME} "fonts"
 set(QML_FILES
     qml/MainTest.qml
     qml/Main.qml
-    qml/MButton.qml
-    qml/MCard.qml
-    qml/MListView.qml
-    qml/MItemDelegate.qml
-    qml/NavigationPane.qml
+    qml/MDelegate.qml
 )
 
 qt_add_qml_module(${APP_NAME}
     URI io.github.zanyxdev.mtproxyinspector
     VERSION 1.0
     QML_FILES ${QML_FILES}
-    QML_FILES qml/NavigationPane.qml
+
 )
 
 target_compile_definitions(${APP_NAME} PRIVATE
