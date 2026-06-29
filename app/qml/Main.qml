@@ -1,5 +1,3 @@
-#pragma ComponentBehavior: Bound
-
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Material
@@ -15,7 +13,7 @@ ApplicationWindow {
     // ----- Property Declarations
     // Required properties should be at the top.
     readonly property int screenOrientation: Qt.PortraitOrientation
-    //property bool isConnected: Core.onlineState
+    property bool internetConnectivity: Core.internetConnectivity
     property var screenWidth: Screen.width
     property var screenHeight: Screen.height
     property var screenAvailableWidth: Screen.desktopAvailableWidth
@@ -292,7 +290,6 @@ ApplicationWindow {
         running: visible
     }
 
-
     RoundButton{
         implicitWidth: 56
         implicitHeight: 56
@@ -354,9 +351,10 @@ ApplicationWindow {
 
         }
         showAnimation.start()
-
     }
-
+    onInternetConnectivityChanged:{
+        console.log(`onInternetConnectivityChanged ${internetConnectivity}`);
+    }
     //--------------------- non Visual items -------------------------------------
     SequentialAnimation {
         id: showAnimation
@@ -396,13 +394,14 @@ ApplicationWindow {
    */
     Connections {
         target: Core
-
+        Component.onCompleted: console.log("Connections to Core established")
         // function onProxyUrlListChanged() {
         //     console.log("Proxy URL list изменился:", Core.proxyUrlList)
         //     AndroidUtils.showToast(qsTr("Proxy URL list изменился!"), false)
         // }
 
         function onShowToastMessage( message){
+            console.log("recive showToast:", message)
             AndroidUtils.showToast(message, false)
         }
     }
