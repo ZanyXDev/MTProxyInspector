@@ -96,8 +96,8 @@ ApplicationWindow {
         spacing: 16
 
         Switch {
-            text: isDark ? "Solarized Dark" : "Solarized Light"
-            checked: isDark
+            text: appWnd.isDark ? "Solarized Dark" : "Solarized Light"
+            checked: appWnd.isDark
             onToggled: appWnd.isDark = checked
         }
 
