@@ -52,11 +52,12 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
 #ifdef QT_DEBUG
-    qputenv("QT_LOGGING_RULES",
-            "qt.qml.binding.removal.info=true;"
-            "qt.qml.imports.debug=true;");
-    QLoggingCategory::setFilterRules(qgetenv("QT_LOGGING_RULES"));
-// "qt.scenegraph.time.renderer=true;"
+    // Правильное разделение через \n, без точки с запятой внутри строки
+    QLoggingCategory::setFilterRules(
+        "qt.qml.binding.removal.info=true\n"
+        "qt.qml.imports.debug=true"
+        );
+// "qt.scenegraph.time.renderer=true;\n"
 // "qt.scenegraph.time.renderloop=true;");
 #endif
 
@@ -85,15 +86,15 @@ int main(int argc, char *argv[])
     // Путь к модулям в build-директории (для локальной разработки)
     // Используем applicationDirPath() — где лежит исполняемый файл
     const QString buildImportPath = QString::fromUtf8(QML_DEV_IMPORT_PATH);
-    qDebug() << "[APP.CPP]  buildImportPath (from CMake):" << buildImportPath;
+    //qDebug() << "[APP.CPP]  buildImportPath (from CMake):" << buildImportPath;
     if (QDir(buildImportPath).exists()) {
         engine.addImportPath(buildImportPath);
-        qDebug() << "[APP.CPP] Added QML import path:" << buildImportPath;
+        //qDebug() << "[APP.CPP] Added QML import path:" << buildImportPath;
     } else {
         qWarning() << "[APP.CPP] WARNING: CMake QML path does not exist:" << buildImportPath;
     }
 #endif
-    qDebug() << "[APP.CPP] QML import paths:" << engine.importPathList();
+    //qDebug() << "[APP.CPP] QML import paths:" << engine.importPathList();
 #endif
 
     QObject::connect(
@@ -108,8 +109,6 @@ int main(int argc, char *argv[])
      * когда состояние необходимо только для первоначальной настройки приложения.
      * В этом случае часто можно использовать QQmlApplicationEngine:setInitialProperties.
      */
-
-
     bool isDebugMode = []() {
 #ifdef QT_DEBUG
         return true;
