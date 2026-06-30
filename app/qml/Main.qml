@@ -14,7 +14,7 @@ ApplicationWindow {
     // ----- Property Declarations
     // Required properties should be at the top.
     readonly property int screenOrientation: Qt.PortraitOrientation
-    property bool internetConnectivity: Core.internetConnectivity
+   // property bool internetConnectivity: Core.internetConnectivity
     property var screenWidth: Screen.width
     property var screenHeight: Screen.height
     property var screenAvailableWidth: Screen.desktopAvailableWidth
@@ -23,11 +23,10 @@ ApplicationWindow {
     // Свойство для версии приложения
     property string appVersion
     property string buildQtVersion
-
     // Свойство-флаг для мобильной платформы
     property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     // Свойство-флаг для режима отладки
-    property bool isDebugMode: false
+    property bool isDebugMode
 
     property bool isDark: true
 
@@ -352,10 +351,9 @@ ApplicationWindow {
 
         }
         showAnimation.start()
+        AppController.initialize()
     }
-    onInternetConnectivityChanged:{
-        console.log(`onInternetConnectivityChanged ${internetConnectivity}`);
-    }
+
     //--------------------- non Visual items -------------------------------------
     SequentialAnimation {
         id: showAnimation
@@ -388,21 +386,26 @@ ApplicationWindow {
     /**
    * @brief Ключевые моменты для Qt6:
    * Аспект         Описание
-   * QML_SINGLETON	Позволяет обращаться к классу как Core напрямую в QML
+   * QML_SINGLETON	Позволяет обращаться к классу как AppController напрямую в QML
    * Connections	Основной способ подключения к сигналам в Qt6 QML
    * Имя функции	on<Сигнал>Changed (с заглавной буквы после on)
    * Аргументы	Принимаются в порядке, как в signals C++
    */
     Connections {
-        target: Core
-        Component.onCompleted: console.log("Connections to Core established")
+        target: AppController
+        Component.onCompleted: console.log("Connections to AppController established")
         // function onProxyUrlListChanged() {
         //     console.log("Proxy URL list изменился:", Core.proxyUrlList)
         //     AndroidUtils.showToast(qsTr("Proxy URL list изменился!"), false)
         // }
 
-        function onShowToastMessage( message){
-            console.log("recive showToast:", message)
+        function onStatusMessageChanged(){
+            console.log("recive statusMessageChanged:")
+            let message = AppController.statusMessage
+            AndroidUtils.showToast(message, false)
+        }
+        function onShowToastMessage( message:string ){
+            console.log("recive onShowToastMessage:")
             AndroidUtils.showToast(message, false)
         }
     }
