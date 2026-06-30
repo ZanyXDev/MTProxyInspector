@@ -3,9 +3,9 @@
 #include <QtQml>
 // appcontroller.h
 class StorageManager;
-
+class NetworkManager;
 // class ServerModel;
-// class NetworkManager;
+
 // class ServerParser;
 // class ServerCheckerPool;
 // class PermissionsManager;
@@ -55,14 +55,13 @@ signals:
     void showToastMessage(const QString &message);
 
 private:
-    void onStorageChecked(bool ok);
-    void onInternetChecked(bool ok);
     void onListsDownloaded();
     void onParsed();
 
     StorageManager        *m_storage = nullptr;
+    NetworkManager        *m_network = nullptr;
+
     // ServerModel           *m_servers = nullptr;
-    // NetworkManager     *m_network;
     // ServerParser       *m_parser;
     // ServerCheckerPool  *m_checkerPool;
     // PermissionsManager *m_permissions;

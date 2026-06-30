@@ -14,12 +14,25 @@ AppController::AppController(QObject *parent)
     connect(m_storage, &StorageManager::accessChecked, this,
             [this](bool ok, const QString &message) {
 #ifdef QT_DEBUG
-                qDebug() << "[AppController]:Recive message" << message;
+                qDebug() << "[AppController]:Recive [ok: "<<ok<< " message:" << message << " ] from: StorageManager";
 #endif
-                (ok) ? emit showToastMessage( message ) :emit errorOccurred( message );
+                (ok) ? emit showToastMessage( message ) : emit errorOccurred( message );
                 if (m_storageAvailable != ok){
                     m_storageAvailable = ok;
                     emit storageAvailableChanged();
+                }
+            });
+
+    m_network = new NetworkManager(this);
+    connect(m_network, &NetworkManager::connectivityChecked, this,
+            [this](bool ok, const QString &message) {
+#ifdef QT_DEBUG
+                qDebug() << "[AppController]:Recive [ok: "<<ok<< " message:" << message << " ] from: NetworkManager";
+#endif
+                (ok) ? emit showToastMessage( message ) : emit errorOccurred( message );
+                if (m_internetAvailable != ok){
+                    m_internetAvailable = ok;
+                    emit internetAvailableChanged();
                 }
             });
 }
@@ -27,6 +40,7 @@ AppController::AppController(QObject *parent)
 void AppController::initialize()
 {
     m_storage->checkAccess();
+    m_network->checkConnectivity();
 }
 
 void AppController::refreshServerLists()

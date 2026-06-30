@@ -8,8 +8,9 @@ qt_add_qml_module(CorePlugin
     URI io.github.zanyxdev.mtproxyinspector.core
     VERSION 1.0
     SOURCES
-        appcontroller.cpp appcontroller.h
+        appcontroller.cpp  appcontroller.h
 	storagemanager.cpp storagemanager.h
+        networkmanager.cpp networkmanager.h
 )
 
 target_link_libraries(CorePlugin PRIVATE Qt6::Gui)
