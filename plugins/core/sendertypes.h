@@ -1,2 +1,2 @@
 #pragma once
-enum class SenderTypes { StorageManager,NetworkManager,PermissManager,ServerParser };
+enum class SenderTypes { StorageManager,NetworkManager,PermissManager,ServerParser,DefaultSender };

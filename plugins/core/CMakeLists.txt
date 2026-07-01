@@ -11,7 +11,6 @@ qt_add_qml_module(CorePlugin
         appcontroller.cpp  appcontroller.h
 	storagemanager.cpp storagemanager.h
         networkmanager.cpp networkmanager.h
-        SOURCES sendertypes.h
 )
 
 target_link_libraries(CorePlugin PRIVATE Qt6::Gui)

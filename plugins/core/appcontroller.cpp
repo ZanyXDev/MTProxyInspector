@@ -1,6 +1,7 @@
 #include <QDebug>
 #include "appcontroller.h"
 #include "storagemanager.h"
+#include "networkmanager.h"
 
 AppController::AppController(QObject *parent)
     : QObject(parent)
@@ -11,10 +12,24 @@ AppController::AppController(QObject *parent)
              << ", instance:" << this;
 #endif
     m_storage = new StorageManager(this);
-    connect(m_storage, &StorageManager::accessChecked, &AppController::onCheckResult);
+    // Логика для хранилища
+    connect(m_storage, &StorageManager::accessChecked, this, [this](bool ok, const QString &msg) {
+        this->handleCommonResult(ok, msg);
+        if (m_storageAvailable != ok) {
+            m_storageAvailable = ok;
+            emit storageAvailableChanged();
+        }
+    });
 
     m_network = new NetworkManager(this);
-    connect(m_network, &NetworkManager::connectivityChecked, &AppController::onCheckResult);
+    // Логика для сети
+    connect(m_network, &NetworkManager::connectivityChecked, this, [this](bool ok, const QString &msg) {
+        this->handleCommonResult(ok, msg);
+        if (m_internetAvailable != ok) {
+            m_internetAvailable = ok;
+            emit internetAvailableChanged();
+        }
+    });
 }
 
 void AppController::initialize()
@@ -42,12 +57,6 @@ void AppController::clearCache()
 {
 
 }
-
-
-// ServerModel *AppController::servers() const
-// {
-//     return m_servers;
-// }
 
 bool AppController::isReady() const
 {
@@ -84,31 +93,7 @@ QString AppController::statusMessage() const
     return m_statusMessage;
 }
 
-void AppController::onCheckResult( bool ok, const QString &message,SenderTypes senderType)
-{
-#ifdef QT_DEBUG
-    qDebug() << "[AppController]:Recive [ok: "<<ok<< " message:" << message << " ] from: senderType:"<<senderType;
-#endif
-    if (ok) {
-        emit showToastMessage( message );
-    } else {
-        emit errorOccurred( message );
-    };
-    switch (senderType) {
-    case SenderTypes::StorageManager:
-        if (m_storageAvailable != ok){
-            m_storageAvailable = ok;
-            emit storageAvailableChanged();
-        }
-        break;
-    case SenderTypes::NetworkManager:
-        if (m_internetAvailable != ok){
-            m_internetAvailable = ok;
-            emit internetAvailableChanged();
-        }
-        break;
-    default:
-        break;
-    }
-
+void AppController::handleCommonResult(bool ok, const QString &message) {
+    if (ok) emit showToastMessage(message);
+    else emit errorOccurred(message);
 }

@@ -1,12 +1,10 @@
 #include <QFileInfo>
 #include "storagemanager.h"
 
-StorageManager::StorageManager(QObject *parent, SenderTypes senderType)
+StorageManager::StorageManager(QObject *parent)
     : QObject(parent)
 {
-    m_dataDir  = QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
-    m_cacheDir = QStandardPaths::writableLocation( QStandardPaths::CacheLocation );
-    m_senderType = senderType;
+    m_dataDir  = QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );    
 }
 
 void StorageManager::checkAccess()
@@ -37,7 +35,7 @@ void StorageManager::checkAccess()
 #ifdef QT_DEBUG
     qDebug() << "[STORAGE]" << "ok:"<< ok << " msg:"<< msg << m_dataDir;
 #endif
-    emit accessChecked( ok, msg , m_senderType);
+    emit accessChecked( ok, msg );
 }
 
 QString StorageManager::dataDir() const
@@ -45,27 +43,14 @@ QString StorageManager::dataDir() const
     return m_dataDir;
 }
 
-QString StorageManager::cacheDir() const
-{
-    return m_cacheDir;
-}
-
 bool StorageManager::saveFile(const QString &fileName, const QByteArray &data)
 {
-
+    return false;
 }
 
 QByteArray StorageManager::loadFile(const QString &fileName) const
 {
-
+    return QByteArray();
 }
 
-bool StorageManager::fileExists(const QString &fileName) const
-{
 
-}
-
-qint64 StorageManager::fileAge(const QString &fileName) const
-{
-
-}

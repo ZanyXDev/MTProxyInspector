@@ -2,15 +2,13 @@
 #include <QObject>
 #include <QtQml>
 // appcontroller.h
+
 class StorageManager;
 class NetworkManager;
 // class ServerModel;
-
 // class ServerParser;
 // class ServerCheckerPool;
 // class PermissionsManager;
-
-#include "sendertypes.h"
 
 class AppController : public QObject {
     Q_OBJECT
@@ -55,11 +53,11 @@ signals:
     void statusMessageChanged();
     void errorOccurred(const QString &message);
     void showToastMessage(const QString &message);
-private slots:
-    void onCheckResult(bool ok, const QString &message,SenderTypes senderType);
+
 private:
     void onListsDownloaded();
-    void onParsed();
+    void onParsed();    
+    void handleCommonResult(bool ok, const QString &message);
 
     StorageManager        *m_storage = nullptr;
     NetworkManager        *m_network = nullptr;

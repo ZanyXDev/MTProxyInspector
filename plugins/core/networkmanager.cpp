@@ -1,9 +1,9 @@
 #include "networkmanager.h"
 
-NetworkManager::NetworkManager(QObject *parent, SenderTypes senderType)
+NetworkManager::NetworkManager(QObject *parent)
     : QObject(parent)
 {
-    m_senderType = senderType;
+
 }
 
 void NetworkManager::checkConnectivity()
