@@ -1,12 +1,13 @@
 #pragma once
 #include <QObject>
 #include <QtQml>
+#include "sendertypes.h"
 
 // storagemanager.h
 class StorageManager : public QObject {
     Q_OBJECT
 public:
-    explicit StorageManager(QObject *parent = nullptr);
+    explicit StorageManager(QObject *parent = nullptr,SenderTypes senderType);
 
     void checkAccess();
     QString dataDir() const;             // QStandardPaths::AppDataLocation
@@ -18,9 +19,10 @@ public:
     qint64 fileAge(const QString &fileName) const;  // для кэша
 
 signals:
-    void accessChecked(bool ok, const QString &error);
+    void accessChecked(bool ok, const QString &message,m_senderType);
 
 private:
     QString m_dataDir;
     QString m_cacheDir;
+    SenderTypes m_senderType;
 };

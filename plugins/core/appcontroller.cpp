@@ -11,30 +11,10 @@ AppController::AppController(QObject *parent)
              << ", instance:" << this;
 #endif
     m_storage = new StorageManager(this);
-    connect(m_storage, &StorageManager::accessChecked, this,
-            [this](bool ok, const QString &message) {
-#ifdef QT_DEBUG
-                qDebug() << "[AppController]:Recive [ok: "<<ok<< " message:" << message << " ] from: StorageManager";
-#endif
-                (ok) ? emit showToastMessage( message ) : emit errorOccurred( message );
-                if (m_storageAvailable != ok){
-                    m_storageAvailable = ok;
-                    emit storageAvailableChanged();
-                }
-            });
+    connect(m_storage, &StorageManager::accessChecked, &AppController::onCheckResult);
 
     m_network = new NetworkManager(this);
-    connect(m_network, &NetworkManager::connectivityChecked, this,
-            [this](bool ok, const QString &message) {
-#ifdef QT_DEBUG
-                qDebug() << "[AppController]:Recive [ok: "<<ok<< " message:" << message << " ] from: NetworkManager";
-#endif
-                (ok) ? emit showToastMessage( message ) : emit errorOccurred( message );
-                if (m_internetAvailable != ok){
-                    m_internetAvailable = ok;
-                    emit internetAvailableChanged();
-                }
-            });
+    connect(m_network, &NetworkManager::connectivityChecked, &AppController::onCheckResult);
 }
 
 void AppController::initialize()
@@ -102,4 +82,33 @@ int AppController::checkTotal() const
 QString AppController::statusMessage() const
 {
     return m_statusMessage;
+}
+
+void AppController::onCheckResult( bool ok, const QString &message,SenderTypes senderType)
+{
+#ifdef QT_DEBUG
+    qDebug() << "[AppController]:Recive [ok: "<<ok<< " message:" << message << " ] from: senderType:"<<senderType;
+#endif
+    if (ok) {
+        emit showToastMessage( message );
+    } else {
+        emit errorOccurred( message );
+    };
+    switch (senderType) {
+    case SenderTypes::StorageManager:
+        if (m_storageAvailable != ok){
+            m_storageAvailable = ok;
+            emit storageAvailableChanged();
+        }
+        break;
+    case SenderTypes::NetworkManager:
+        if (m_internetAvailable != ok){
+            m_internetAvailable = ok;
+            emit internetAvailableChanged();
+        }
+        break;
+    default:
+        break;
+    }
+
 }

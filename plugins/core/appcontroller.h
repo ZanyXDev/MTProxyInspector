@@ -10,6 +10,8 @@ class NetworkManager;
 // class ServerCheckerPool;
 // class PermissionsManager;
 
+#include "sendertypes.h"
+
 class AppController : public QObject {
     Q_OBJECT
     QML_ELEMENT
@@ -53,7 +55,8 @@ signals:
     void statusMessageChanged();
     void errorOccurred(const QString &message);
     void showToastMessage(const QString &message);
-
+private slots:
+    void onCheckResult(bool ok, const QString &message,SenderTypes senderType);
 private:
     void onListsDownloaded();
     void onParsed();
