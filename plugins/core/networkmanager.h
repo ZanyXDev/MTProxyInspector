@@ -12,5 +12,5 @@ public:
 signals:
     void connectivityChecked(bool ok, const QString &message);
 private:
-
+    bool m_internetConnectivity;
 };
