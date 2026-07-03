@@ -19,7 +19,7 @@ signals:
     // Сигнал отправляется, когда один прокси проверен
     void proxyChecked(const ProxyResult &result);
     void batchProxyChecked(const QList<ProxyResult> &results);
-    void proxyListChanged();
+    void proxyListChanged(const int serversCount);
     void loadingStatusChanged(bool ok, const QString &message, const QString &errorType = QString());
 
 private slots:
@@ -38,7 +38,7 @@ private:
         bool isOnline;
         QString message;
     };
-    ProxyResult checkSingleProxy(const QString &proxyUrl);
+    ProxyResult checkSingleProxy(const QString &proxyUrl) const;
     void refreshProxyLists(const QStringList &sources);
     Status parseReachability(QNetworkInformation::Reachability reachability) const;
 };

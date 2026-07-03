@@ -149,9 +149,10 @@ void NetworkManager::onReplyFinished()
             errorType = "success";
 
             // Сохраняем список прокси
-            m_currentProxyList = proxyList;
-            ///TODO запуск многопоточной проверки прокси серверов
-            emit proxyListChanged();
+            m_currentProxyList = proxyList;            
+            emit proxyListChanged( m_currentProxyList.count() );
+            // запуск многопоточной проверки прокси серверов
+            refreshProxyLists( m_currentProxyList );
         } else {
             success = false;
             errorMessage = tr("Файл с прокси пуст");
@@ -164,15 +165,18 @@ void NetworkManager::onReplyFinished()
 }
 
 // Функция проверки ОДНОГО прокси (работает в фоновом потоке)
-ProxyResult  NetworkManager::checkSingleProxy(const QString &proxyUrl) {
+ProxyResult  NetworkManager::checkSingleProxy(const QString &proxyUrl) const{
     ProxyResult result;
     // ... логика проверки, замер latency ...
     return result;
 }
 void NetworkManager::refreshProxyLists(const QStringList &sources){
-    // Запускаем параллельную проверку всего списка!
-    QFuture<ProxyResult> future = QtConcurrent::mapped(sources, checkSingleProxy);
-
+    /** @note Самый современный и чистый способ в C++11 и новее.
+     *  Передача this в контекст лямбды, чтобы вызвать метод у текущего объекта.
+    */
+    QFuture<ProxyResult> future = QtConcurrent::mapped(sources, [this](const QString &proxyUrl) {
+        return checkSingleProxy(proxyUrl);
+    });
     // Отслеживаем результаты через watcher
     auto *watcher = new QFutureWatcher<ProxyResult>(this);
 

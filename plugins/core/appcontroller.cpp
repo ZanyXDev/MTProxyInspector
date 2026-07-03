@@ -32,6 +32,8 @@ AppController::AppController(QObject *parent)
     });
     connect(m_network, &NetworkManager::proxyChecked,
             this, &AppController::onProxyChecked);
+    connect(m_network, &NetworkManager::proxyListChanged,
+            this, &AppController::proxyListChanged);
 }
 
 void AppController::initialize()

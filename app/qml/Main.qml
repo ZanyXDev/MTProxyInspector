@@ -14,7 +14,7 @@ ApplicationWindow {
     // ----- Property Declarations
     // Required properties should be at the top.
     readonly property int screenOrientation: Qt.PortraitOrientation
-   // property bool internetConnectivity: Core.internetConnectivity
+    // property bool internetConnectivity: Core.internetConnectivity
     property var screenWidth: Screen.width
     property var screenHeight: Screen.height
     property var screenAvailableWidth: Screen.desktopAvailableWidth
@@ -399,10 +399,9 @@ ApplicationWindow {
         //     AndroidUtils.showToast(qsTr("Proxy URL list изменился!"), false)
         // }
 
-        function onStatusMessageChanged(){
-            console.log("recive statusMessageChanged:")
-            let message = AppController.statusMessage
-            AndroidUtils.showToast(message, false)
+        function onProxyListChanged(srvCount:int){
+            console.log(`recive onProxyListChanged:${srvCount}`);
+
         }
         function onShowToastMessage( message:string ){
             console.log("recive onShowToastMessage:")

@@ -50,6 +50,8 @@ signals:
     void showToastMessage(const QString &message);
 
     void sourceProxyListsChanged();
+    void proxyListChanged(const int serversCount);
+
 private slots:
     void onProxyChecked(const ProxyResult &result);
 private:
