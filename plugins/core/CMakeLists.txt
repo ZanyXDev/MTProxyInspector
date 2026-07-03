@@ -9,9 +9,10 @@ qt_add_qml_module(CorePlugin
     VERSION 1.0
     SOURCES
         appcontroller.cpp  appcontroller.h
-	storagemanager.cpp storagemanager.h
+        storagemanager.cpp storagemanager.h
         networkmanager.cpp networkmanager.h
         proxyresult.h
+        proxylistmodel.cpp proxylistmodel.h
 )
 
 target_link_libraries(CorePlugin PRIVATE

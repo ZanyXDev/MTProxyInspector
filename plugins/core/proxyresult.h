@@ -1,12 +1,13 @@
 #pragma once
 #include <QMetaType>
+
 struct ProxyResult {
-    QString url;
-    int latency;
-    int port;
-    QString typeProxy;
-    QString typeCiphers;
-    QString desc;
+    QString server;
+    int     latency    = 0;
+    int     port       = 0;
+    QString secret;
+    int     mType      = 0;
+    bool    isFavorite = false;
 };
-// Регистрируем тип, чтобы Qt мог передавать его между потоками
+
 Q_DECLARE_METATYPE(ProxyResult)

@@ -2,6 +2,7 @@
 #include "appcontroller.h"
 #include "storagemanager.h"
 #include "networkmanager.h"
+#include "proxylistmodel.h"
 
 AppController::AppController(QObject *parent)
     : QObject(parent)
@@ -34,6 +35,8 @@ AppController::AppController(QObject *parent)
             this, &AppController::onProxyChecked);
     connect(m_network, &NetworkManager::proxyListChanged,
             this, &AppController::proxyListChanged);
+
+    m_proxyListModel = new ProxyListModel(this);
 }
 
 void AppController::initialize()
