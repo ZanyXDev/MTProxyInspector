@@ -127,29 +127,14 @@ void NetworkManager::onReplyFinished()
     }else{
         // Загружаем данные в QStringList
         QByteArray data = reply->readAll();
+        // Сохраняем список прокси
         QString content = QString::fromUtf8(data);
+        m_currentProxyList =  deduplicateProxyList( content );
 
-        // Разбиваем на строки, удаляем пустые строки
-        QStringList proxyList = content.split('\n', Qt::SkipEmptyParts);
-        for (QString &line : proxyList) {
-            line = line.trimmed();
-            if (line.isEmpty() || line.startsWith('#')) {
-                line = "";
-                continue;
-            }
-            QUrl qurl(line);
-            if (!(qurl.isValid() && qurl.scheme() == "tg")){
-                line = ""; // Не валидный URL или нет протокола
-            }
-        }
-        proxyList.removeAll("");
-        if (!proxyList.isEmpty()) {
+        if (!m_currentProxyList.isEmpty()) {
             success = true;
-            errorMessage = tr("Загружено %1 mtproxy").arg(proxyList.size());
+            errorMessage = tr("Загружено %1 mtproxy").arg(m_currentProxyList.size());
             errorType = "success";
-
-            // Сохраняем список прокси
-            m_currentProxyList = proxyList;            
             emit proxyListChanged( m_currentProxyList.count() );
             // запуск многопоточной проверки прокси серверов
             refreshProxyLists( m_currentProxyList );
@@ -191,6 +176,98 @@ void NetworkManager::refreshProxyLists(const QStringList &sources){
 
     watcher->setFuture(future);
 }
+
+QStringList NetworkManager::deduplicateProxyList(const QString &rawProxyListData)
+{
+    QSet<QString> seenKeys;
+    QStringList result;
+    // Разбиваем на строки, удаляем пустые строки
+    QStringList proxyList = rawProxyListData.split('\n', Qt::SkipEmptyParts);
+    for (QString &line : proxyList) {
+        line = line.trimmed();
+        if (line.isEmpty() || line.startsWith('#')) {
+            line = "";
+            continue;
+        }
+        QUrl qurl(line);
+        if (!(qurl.isValid() && qurl.scheme() == "tg")){
+            line = ""; // Не валидный URL или нет протокола
+        }
+    }
+    // удаляем пустые строки
+    proxyList.removeAll("");
+
+    for (const auto& proxy : proxyList) {
+        QString key = normalizeProxyKey(proxy);
+        // Если такой ключ нормализации встретился впервые, сохраняем прокси
+        if (!seenKeys.contains(key)) {
+            seenKeys.insert(key);
+            result.append(proxy);
+        }
+    }
+    return result;
+}
+
+QString NetworkManager::normalizeProxyKey(const QString &url)
+{
+    QStringView urlView(url);
+    QStringView paramsPart;
+
+    // Проверяем префиксы (в Qt6 метод startsWith поддерживает QStringView)
+    if (urlView.startsWith(u"tg://proxy?")) {
+        paramsPart = urlView.mid(11);
+    } else if (urlView.startsWith(u"tg://socks?")) {
+        paramsPart = urlView.mid(11);
+    } else if (urlView.startsWith(u"https://t.me?")) {
+        paramsPart = urlView.mid(19);
+    } else if (urlView.startsWith(u"https://t.me?")) {
+        paramsPart = urlView.mid(19);
+    } else {
+        return url;
+    }
+    // Разбиваем параметры по символу '&'
+    auto params = paramsPart.split(u'&');
+    QStringView server;
+    QStringView port;
+    QStringView secret;
+    for (const auto& param : params) {
+        if (param.startsWith(u"server=")) {
+            server = param.mid(7);
+        } else if (param.startsWith(u"port=")) {
+            port = param.mid(5);
+        } else if (param.startsWith(u"secret=")) {
+            QStringView rawSecret = param.mid(7);
+
+            // Ищем первый разделитель из набора: &, #, @
+            int firstDelim = -1;
+            for (int i = 0; i < rawSecret.size(); ++i) {
+                char16_t ch = rawSecret[i].unicode();
+                if (ch == u'&' || ch == u'#' || ch == u'@') {
+                    firstDelim = i;
+                    break;
+                }
+            }
+
+            QStringView cleanSecret = (firstDelim == -1)
+                                          ? rawSecret
+                                          : rawSecret.first(firstDelim);
+
+            if (!cleanSecret.isEmpty()) {
+                secret = cleanSecret;
+            }
+        }
+    }
+    // Собираем результирующий ключ нормализации
+    if (!server.isEmpty() && !port.isEmpty() && !secret.isEmpty()) {
+        return QString(u"%1:%2:%3").arg(server, port, secret);
+    };
+    if (!server.isEmpty() && !port.isEmpty()) {
+        return QString(u"%1:%2").arg(server, port);
+    }
+    return url;
+}
+
+
 // Метод возвращает структуру, которая на лету раскладывается в C++17 коде
 NetworkManager::Status NetworkManager::parseReachability(QNetworkInformation::Reachability reachability) const
 {

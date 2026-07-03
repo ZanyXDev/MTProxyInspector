@@ -3,6 +3,9 @@
 #include <QtQml>
 #include <QNetworkReply>
 #include <QNetworkAccessManager>
+#include <QSet>
+#include <QStringView>
+
 #include "proxyresult.h"
 
 // networkmanager.h
@@ -41,4 +44,7 @@ private:
     ProxyResult checkSingleProxy(const QString &proxyUrl) const;
     void refreshProxyLists(const QStringList &sources);
     Status parseReachability(QNetworkInformation::Reachability reachability) const;
+
+    QStringList deduplicateProxyList(const QString& rawProxyListData);
+    QString normalizeProxyKey(const QString& url);
 };

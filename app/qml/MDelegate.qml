@@ -8,17 +8,17 @@ import QtQuick.Layouts
 ItemDelegate {
     id:root
     // Строгая типизация данных из C++ модели (Qt 6 best practice)
-    required property string domainName
+
     required property int ping
     required property int port
-    required property int mtype
-    required property bool isFavorite
+    required property string server
     required property string secret
+
+    property string tgUrl:"tg://proxy?server="+server+"&port="+port+"&secret="+secret
+
     property color themeRed: Material.color(Material.Red, Material.Shade800)
     property color themeGreen: Material.color(Material.Green, Material.Shade800)
-    //tg://proxy?server=87.248.129.102&port=8443&secret=ee1603010200010001fc030386e24c3add626973636f7474692e79656b74616e65742e636f6d
 
-    property string tgUrl:"tg://proxy?server="+domainName+"&port="+port+"&secret="+secret
     // Тень меняется при нажатии (эффект "поднятия" карточки)
     Material.elevation: root.down ? 6 : 2
 
@@ -35,7 +35,7 @@ ItemDelegate {
             Layout.leftMargin: 16
             Layout.rightMargin: 16
 
-            text: root.domainName
+            text: root.server
             font.family: root.font.family
             font.pixelSize: 18
             color: root.Material.primaryTextColor
@@ -74,17 +74,7 @@ ItemDelegate {
                 verticalAlignment: Text.AlignVCenter
                 horizontalAlignment: Text.AlignHCenter
             }
-            Label {
-                Layout.preferredWidth:  48
-                Layout.fillHeight: true
 
-                text: root.getProxyType(root.mtype)
-                font.family: root.font.family
-                font.pixelSize: 18
-
-                verticalAlignment: Text.AlignVCenter
-                horizontalAlignment: Text.AlignHCenter
-            }
             Item{
                 Layout.fillWidth: true
             }
@@ -103,17 +93,7 @@ ItemDelegate {
             Layout.rightMargin: 16
             spacing: 8
 
-            RoundButton{
-                Layout.alignment: Qt.AlignRight
-                implicitWidth: 42
-                implicitHeight: 42
-                icon.source:  "qrc:/qt/qml/assets/images/like.png"
-                icon.color:(root.isFavorite) ? Material.accentColor : Material.iconDisabledColor
-                Material.elevation: 4
-                onClicked: {
-                    root.isFavorite =!root.isFavorite
-                }
-            }
+
             RoundButton{
                 Layout.alignment: Qt.AlignRight
                 implicitWidth: 42
@@ -158,12 +138,5 @@ ItemDelegate {
             active: enabled && (root.down || root.visualFocus || root.hovered)
             color: root.Material.rippleColor
         }
-    }
-
-    function getProxyType( index ){
-        if (index === 1) return qsTr("Socks5")
-        if (index === 2) return qsTr("Padding")
-        if (index === 3) return qsTr("FakeTls")
-        return qsTr("Unknow")
-    }
+    }   
 }

@@ -2,7 +2,7 @@
 #include "appcontroller.h"
 #include "storagemanager.h"
 #include "networkmanager.h"
-#include "proxylistmodel.h"
+
 
 AppController::AppController(QObject *parent)
     : QObject(parent)
@@ -36,6 +36,7 @@ AppController::AppController(QObject *parent)
     connect(m_network, &NetworkManager::proxyListChanged,
             this, &AppController::proxyListChanged);
 
+
     m_proxyListModel = new ProxyListModel(this);
 }
 
@@ -43,10 +44,7 @@ void AppController::initialize()
 {
     m_storage->checkAccess();
     m_network->checkConnectivity();
-#ifdef QT_DEBUG
-    m_sourceProxyLists= "https://raw.githubusercontent.com/kort0881/telegram-proxy-collector/refs/heads/main/proxy_ru.txt";
     this->refreshServerLists();
-#endif
 }
 
 void AppController::refreshServerLists()
@@ -55,6 +53,10 @@ void AppController::refreshServerLists()
     if (m_sourceProxyLists.isEmpty()) {
         return;
     }else{
+
+#ifdef QT_DEBUG
+        m_sourceProxyLists= "https://raw.githubusercontent.com/kort0881/telegram-proxy-collector/refs/heads/main/proxy_ru.txt";
+#endif
         m_network->refreshProxyLists( m_sourceProxyLists );
     }
 
@@ -68,6 +70,11 @@ void AppController::checkAllServers()
 void AppController::cancelCheck()
 {
 
+}
+
+ProxyListModel *AppController::servers() const
+{
+    return m_proxyListModel;
 }
 
 bool AppController::storageAvailable() const

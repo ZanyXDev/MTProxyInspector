@@ -71,7 +71,6 @@ qt_add_resources(${APP_NAME} "fonts"
 )
 
 set(QML_FILES
-    qml/MainTest.qml
     qml/Main.qml
     qml/MDelegate.qml
 )
@@ -80,7 +79,6 @@ qt_add_qml_module(${APP_NAME}
     URI io.github.zanyxdev.mtproxyinspector
     VERSION 1.0
     QML_FILES ${QML_FILES}
-
 )
 
 target_compile_definitions(${APP_NAME} PRIVATE

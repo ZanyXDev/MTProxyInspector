@@ -2,21 +2,18 @@
 #include <QObject>
 #include <QtQml>
 #include "proxyresult.h"
+#include "proxylistmodel.h"
 
 // appcontroller.h
 
 class StorageManager;
 class NetworkManager;
-class ServerModel;
-// class ServerParser;
-// class ServerCheckerPool;
-// class PermissionsManager;
 
 class AppController : public QObject {
     Q_OBJECT
     QML_ELEMENT
     QML_SINGLETON
-    Q_PROPERTY(ServerModel* servers READ servers CONSTANT)
+    Q_PROPERTY(ProxyListModel* servers READ servers CONSTANT)
     Q_PROPERTY(bool storageAvailable READ storageAvailable NOTIFY storageAvailableChanged)
     Q_PROPERTY(bool internetAvailable READ internetAvailable NOTIFY internetAvailableChanged)
     Q_PROPERTY(int checkProgress READ checkProgress NOTIFY checkProgressChanged)
@@ -31,7 +28,7 @@ public:
     Q_INVOKABLE void checkAllServers();     // проверить доступность
     Q_INVOKABLE void cancelCheck();         // отменить проверку
 
-    //ServerModel *servers() const;
+    ProxyListModel *servers() const;
     bool storageAvailable() const;
     bool internetAvailable() const;
     int checkProgress() const;
@@ -61,8 +58,7 @@ private:
 
     StorageManager        *m_storage = nullptr;
     NetworkManager        *m_network = nullptr;
-
-    ServerModel           *m_servers = nullptr;
+    ProxyListModel        *m_proxyListModel = nullptr;
     // ServerParser       *m_parser;
     // ServerCheckerPool  *m_checkerPool;
     // PermissionsManager *m_permissions;

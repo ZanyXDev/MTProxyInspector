@@ -26,10 +26,10 @@ QModelIndex ProxyListModel::parent(const QModelIndex &index) const
 QHash<int, QByteArray> ProxyListModel::roleNames() const
 {
     return {
-        { ServerDisplayRole, "serverDisplay" },
-        { PingRole,          "ping" },
-        { PortRole,          "port" },
-        { SecretRole,        "secret" }
+        { PingRole,    "ping" },
+        { PortRole,    "port" },
+        { ServerRole, "server" },
+        { SecretRole,  "secret" }
     };
 }
 
@@ -51,11 +51,11 @@ QVariant ProxyListModel::data(const QModelIndex &index, int role) const
     const ProxyResult &item = m_items.at(index.row());
 
     switch (role) {
-    case ServerDisplayRole: return item.server;
-    case PingRole:          return item.latency;
-    case PortRole:          return item.port;
-    case SecretRole:        return item.secret;
-    default:                return {};
+    case PingRole:   return item.ping;
+    case PortRole:   return item.port;
+    case ServerRole: return item.server;
+    case SecretRole: return item.secret;
+    default:         return {};
     }        
 }
 
@@ -76,11 +76,11 @@ void ProxyListModel::clear()
 }
 
 
-void ProxyListModel::updateLatency(int row, int latency)
+void ProxyListModel::updateLatency(int row, int ping)
 {
     if (row < 0 || row >= m_items.size())
         return;
-    m_items[row].latency = latency;
+    m_items[row].ping = ping;
     QModelIndex idx = index(row, 0);
     emit dataChanged(idx, idx, { PingRole });
 }

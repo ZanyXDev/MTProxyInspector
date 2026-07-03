@@ -9,9 +9,9 @@ class ProxyListModel : public QAbstractListModel {
 
 public:
     enum Roles {
-        ServerDisplayRole = Qt::UserRole + 1,
-        PingRole,
+        PingRole = Qt::UserRole + 1,
         PortRole,
+        ServerRole,
         SecretRole,
     };
     Q_ENUM(Roles)
@@ -33,7 +33,7 @@ public:
 public slots:
     void append(const ProxyResult &result);
     void clear();
-    void updateLatency(int row, int latency);
+    void updateLatency(int row, int ping);
 
 private:
     QList<ProxyResult> m_items;
