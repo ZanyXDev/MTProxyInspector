@@ -1,6 +1,8 @@
 #pragma once
 #include <QObject>
 #include <QtQml>
+#include "proxyresult.h"
+
 // appcontroller.h
 
 class StorageManager;
@@ -15,14 +17,11 @@ class AppController : public QObject {
     QML_ELEMENT
     QML_SINGLETON
     //Q_PROPERTY(ServerModel* servers READ servers CONSTANT)
-    Q_PROPERTY(bool isReady READ isReady NOTIFY isReadyChanged)
     Q_PROPERTY(bool storageAvailable READ storageAvailable NOTIFY storageAvailableChanged)
     Q_PROPERTY(bool internetAvailable READ internetAvailable NOTIFY internetAvailableChanged)
-    Q_PROPERTY(bool isLoading READ isLoading NOTIFY isLoadingChanged)
     Q_PROPERTY(int checkProgress READ checkProgress NOTIFY checkProgressChanged)
     Q_PROPERTY(int checkTotal READ checkTotal NOTIFY checkTotalChanged)
-    Q_PROPERTY(QString statusMessage READ statusMessage NOTIFY statusMessageChanged)
-
+    Q_PROPERTY(QString sourceProxyLists READ sourceProxyLists WRITE setSourceProxyLists NOTIFY sourceProxyListsChanged FINAL)
 public:
     explicit AppController(QObject *parent = nullptr);
     ~AppController() override = default; // Явное определение по умолчанию
@@ -31,29 +30,28 @@ public:
     Q_INVOKABLE void refreshServerLists();  // скачать URL-листы
     Q_INVOKABLE void checkAllServers();     // проверить доступность
     Q_INVOKABLE void cancelCheck();         // отменить проверку
-    Q_INVOKABLE void clearCache();
 
     //ServerModel *servers() const;
-
-    bool isReady() const;
     bool storageAvailable() const;
     bool internetAvailable() const;
-    bool isLoading() const;
     int checkProgress() const;
     int checkTotal() const;
-    QString statusMessage() const;
+
+    QString sourceProxyLists() const;
+    void setSourceProxyLists(const QString &newSourceProxyLists);
 
 signals:
-    void isReadyChanged();
     void storageAvailableChanged();
     void internetAvailableChanged();
-    void isLoadingChanged();
     void checkProgressChanged();
     void checkTotalChanged();
-    void statusMessageChanged();
+
     void errorOccurred(const QString &message);
     void showToastMessage(const QString &message);
 
+    void sourceProxyListsChanged();
+private slots:
+    void onProxyChecked(const ProxyResult &result);
 private:
     void onListsDownloaded();
     void onParsed();    
@@ -67,11 +65,9 @@ private:
     // ServerCheckerPool  *m_checkerPool;
     // PermissionsManager *m_permissions;
 
-    bool m_isReady = false;
     bool m_storageAvailable  = false;
     bool m_internetAvailable  = false;
-    bool m_isLoading = false;
     int m_checkProgress = -1;
     int m_checkTotal = -1;
-    QString m_statusMessage = QString();
+    QString m_sourceProxyLists;
 };

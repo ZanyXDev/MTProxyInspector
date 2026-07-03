@@ -30,16 +30,28 @@ AppController::AppController(QObject *parent)
             emit internetAvailableChanged();
         }
     });
+    connect(m_network, &NetworkManager::proxyChecked,
+            this, &AppController::onProxyChecked);
 }
 
 void AppController::initialize()
 {
     m_storage->checkAccess();
     m_network->checkConnectivity();
+#ifdef QT_DEBUG
+    m_sourceProxyLists= "https://raw.githubusercontent.com/kort0881/telegram-proxy-collector/refs/heads/main/proxy_ru.txt";
+    this->refreshServerLists();
+#endif
 }
 
 void AppController::refreshServerLists()
 {
+    if (!(m_storageAvailable && m_internetAvailable)) return;
+    if (m_sourceProxyLists.isEmpty()) {
+        return;
+    }else{
+        m_network->refreshProxyLists( m_sourceProxyLists );
+    }
 
 }
 
@@ -53,16 +65,6 @@ void AppController::cancelCheck()
 
 }
 
-void AppController::clearCache()
-{
-
-}
-
-bool AppController::isReady() const
-{
-    return m_isReady;
-}
-
 bool AppController::storageAvailable() const
 {
     return m_storageAvailable;
@@ -71,11 +73,6 @@ bool AppController::storageAvailable() const
 bool AppController::internetAvailable() const
 {
     return m_internetAvailable;
-}
-
-bool AppController::isLoading() const
-{
-    return m_isLoading;
 }
 
 int AppController::checkProgress() const
@@ -88,12 +85,25 @@ int AppController::checkTotal() const
     return m_checkTotal;
 }
 
-QString AppController::statusMessage() const
-{
-    return m_statusMessage;
-}
-
 void AppController::handleCommonResult(bool ok, const QString &message) {
     if (ok) emit showToastMessage(message);
     else emit errorOccurred(message);
+}
+
+QString AppController::sourceProxyLists() const
+{
+    return m_sourceProxyLists;
+}
+
+void AppController::setSourceProxyLists(const QString &newSourceProxyLists)
+{
+    if (m_sourceProxyLists == newSourceProxyLists)
+        return;
+    m_sourceProxyLists = newSourceProxyLists;
+    emit sourceProxyListsChanged();
+}
+
+void AppController::onProxyChecked(const ProxyResult &result)
+{
+
 }
