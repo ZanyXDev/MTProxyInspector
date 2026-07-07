@@ -3,6 +3,7 @@
 #include <QtQml>
 #include "proxyresult.h"
 #include "proxylistmodel.h"
+#include "sourcelinkmodel.h"
 
 // appcontroller.h
 
@@ -14,6 +15,7 @@ class AppController : public QObject {
     QML_ELEMENT
     QML_SINGLETON
     Q_PROPERTY(ProxyListModel* servers READ servers CONSTANT)
+    Q_PROPERTY(SourceLinkModel* proxySourceLinksModel READ servers CONSTANT)
     Q_PROPERTY(bool storageAvailable READ storageAvailable NOTIFY storageAvailableChanged)
     Q_PROPERTY(bool internetAvailable READ internetAvailable NOTIFY internetAvailableChanged)
     Q_PROPERTY(int checkProgress READ checkProgress NOTIFY checkProgressChanged)
@@ -68,4 +70,5 @@ private:
     int m_checkProgress = -1;
     int m_checkTotal = -1;
     QString m_sourceProxyLists;
+    SourceLinkModel *m_proxySourceLinksModel = nullptr;
 };

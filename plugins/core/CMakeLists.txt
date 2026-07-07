@@ -11,8 +11,10 @@ qt_add_qml_module(CorePlugin
         appcontroller.cpp  appcontroller.h
         storagemanager.cpp storagemanager.h
         networkmanager.cpp networkmanager.h
-        proxyresult.h
+        proxyresult.h proxysourcelink.h
         proxylistmodel.cpp proxylistmodel.h
+        genericlistmodel.h genericlistmodel.cpp
+        sourcelinkmodel.h sourcelinkmodel.cpp      
 )
 
 target_link_libraries(CorePlugin PRIVATE

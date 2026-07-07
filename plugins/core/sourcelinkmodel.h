@@ -1,34 +1,31 @@
 #pragma once
 #include <QAbstractListModel>
 #include <QList>
-#include "proxyresult.h"
+#include "proxysourcelink.h"
 #include "genericlistmodel.h"
 
-class ProxyListModel : public GenericListModel {
+class SourceLinkModel : public GenericListModel {
     Q_OBJECT
-    Q_DISABLE_COPY_MOVE(ProxyListModel)
+    Q_DISABLE_COPY_MOVE(SourceLinkModel)
 
 public:
     enum Roles {
-        PingRole = Qt::UserRole + 1,
-        PortRole,
+        TitleRole = Qt::UserRole + 1,
         ServerRole,
-        SecretRole,
     };
     Q_ENUM(Roles)
 
-    explicit ProxyListModel(QObject *parent = nullptr);
+    explicit SourceLinkModel(QObject *parent = nullptr);
 
 public slots:
-    void append(const ProxyResult &result);
+    void append(const ProxySourceLink &link);
     void clear();
-    void updateLatency(int row, int ping);
-
 protected:
     int doRowCount() const override;
     QHash<int, QByteArray> doRoleNames() const override;
     QVariant doData(int row, int role) const override;
 
 private:
-    QList<ProxyResult> m_items;
+    QList<ProxySourceLink> m_items;
 };
+

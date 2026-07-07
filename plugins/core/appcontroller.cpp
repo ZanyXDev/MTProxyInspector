@@ -12,6 +12,9 @@ AppController::AppController(QObject *parent)
              << QTime::currentTime().toString("hh:mm:ss.zzz")
              << ", instance:" << this;
 #endif
+    m_proxyListModel = new ProxyListModel(this);
+    m_proxySourceLinksModel = new SourceLinkModel(this);
+
     m_storage = new StorageManager(this);
     // Логика для хранилища
     connect(m_storage, &StorageManager::accessChecked, this, [this](bool ok, const QString &msg) {
@@ -37,13 +40,13 @@ AppController::AppController(QObject *parent)
             this, &AppController::proxyListChanged);
 
 
-    m_proxyListModel = new ProxyListModel(this);
 }
 
 void AppController::initialize()
 {
     m_storage->checkAccess();
     m_network->checkConnectivity();
+    ///TODO Перенсти в блок обработки сигнала что настройки загружены
     this->refreshServerLists();
 }
 
