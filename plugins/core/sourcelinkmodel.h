@@ -1,6 +1,8 @@
 #pragma once
 #include <QAbstractListModel>
 #include <QList>
+#include <QVariantList>
+
 #include "proxysourcelink.h"
 #include "genericlistmodel.h"
 
@@ -18,6 +20,7 @@ public:
     explicit SourceLinkModel(QObject *parent = nullptr);
 
 public slots:
+    void setFromList(const QVariantList &m_proxyLinks);
     void append(const ProxySourceLink &link);
     void clear();
 protected:

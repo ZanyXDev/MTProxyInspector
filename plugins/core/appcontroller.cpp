@@ -1,4 +1,6 @@
 #include <QDebug>
+#include <QVariantMap>
+#include <QVariantList>
 #include "appcontroller.h"
 #include "storagemanager.h"
 #include "networkmanager.h"
@@ -13,7 +15,7 @@ AppController::AppController(QObject *parent)
              << ", instance:" << this;
 #endif
     m_proxyListModel = new ProxyListModel(this);
-    m_proxySourceLinksModel = new SourceLinkModel(this);
+    m_sourceLinksModel = new SourceLinkModel(this);
 
     m_storage = new StorageManager(this);
     // Логика для хранилища
@@ -21,9 +23,16 @@ AppController::AppController(QObject *parent)
         this->handleCommonResult(ok, msg);
         if (m_storageAvailable != ok) {
             m_storageAvailable = ok;
+            m_storage->loadSettings();
             emit storageAvailableChanged();
         }
     });
+
+    connect(m_storage, &StorageManager::appSettingsChanged, this, [this](const QVariantMap &appSettings) {
+        qDebug() << "Recived: appSettingsChanged:" <<appSettings;
+    });
+
+    connect(m_storage, &StorageManager::proxyLinksChanged, m_sourceLinksModel, &SourceLinkModel::setFromList );
 
     m_network = new NetworkManager(this);
     // Логика для сети
@@ -37,9 +46,7 @@ AppController::AppController(QObject *parent)
     connect(m_network, &NetworkManager::proxyChecked,
             this, &AppController::onProxyChecked);
     connect(m_network, &NetworkManager::proxyListChanged,
-            this, &AppController::proxyListChanged);
-
-
+            this, &AppController::proxyListChanged);    
 }
 
 void AppController::initialize()
@@ -53,15 +60,12 @@ void AppController::initialize()
 void AppController::refreshServerLists()
 {
     if (!(m_storageAvailable && m_internetAvailable)) return;
-    if (m_sourceProxyLists.isEmpty()) {
-        return;
-    }else{
 
-#ifdef QT_DEBUG
-        m_sourceProxyLists= "https://raw.githubusercontent.com/kort0881/telegram-proxy-collector/refs/heads/main/proxy_ru.txt";
-#endif
-        m_network->refreshProxyLists( m_sourceProxyLists );
-    }
+    // if (m_sourceProxyLists.isEmpty()) {
+    //     return;
+    // }else{
+    //     m_network->refreshProxyLists( m_sourceProxyLists );
+    // }
 
 }
 
@@ -73,6 +77,11 @@ void AppController::checkAllServers()
 void AppController::cancelCheck()
 {
 
+}
+
+void AppController::saveSetting()
+{
+    m_storage->saveSettings();
 }
 
 ProxyListModel *AppController::servers() const
@@ -105,20 +114,12 @@ void AppController::handleCommonResult(bool ok, const QString &message) {
     else emit errorOccurred(message);
 }
 
-QString AppController::sourceProxyLists() const
-{
-    return m_sourceProxyLists;
-}
-
-void AppController::setSourceProxyLists(const QString &newSourceProxyLists)
-{
-    if (m_sourceProxyLists == newSourceProxyLists)
-        return;
-    m_sourceProxyLists = newSourceProxyLists;
-    emit sourceProxyListsChanged();
-}
-
 void AppController::onProxyChecked(const ProxyResult &result)
 {
 
+}
+
+SourceLinkModel *AppController::sourceLinksModel() const
+{
+    return m_sourceLinksModel;
 }
