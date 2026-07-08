@@ -17,6 +17,7 @@ void SourceLinkModel::setFromList(const QVariantList &m_proxyLinks)
 
         proxyLinkItem.url_title  = linkMap.value("title").toString();
         proxyLinkItem.url_server = linkMap.value("server").toString();
+        proxyLinkItem.selected   = linkMap.value("selected").toBool();
         // Добавляем элемент в модель
         append( proxyLinkItem );
     }
@@ -44,15 +45,17 @@ int SourceLinkModel::doRowCount() const {
 QHash<int, QByteArray> SourceLinkModel::doRoleNames() const {
     return {
         {TitleRole, "url_title"},
-        {ServerRole, "url_server"}
+        {ServerRole, "url_server"},
+        {SelectedRole, "selected"}
     };
 }
 
 QVariant SourceLinkModel::doData(int row, int role) const {
     const ProxySourceLink &item = m_items.at(row);
     switch (role) {
-    case TitleRole:  return item.url_title;
-    case ServerRole: return item.url_server;
-    default:         return QVariant();
+    case TitleRole:    return item.url_title;
+    case ServerRole:   return item.url_server;
+    case SelectedRole: return item.selected;
+    default:           return QVariant();
     }
 }

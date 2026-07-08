@@ -14,6 +14,7 @@ public:
     enum Roles {
         TitleRole = Qt::UserRole + 1,
         ServerRole,
+        SelectedRole
     };
     Q_ENUM(Roles)
 

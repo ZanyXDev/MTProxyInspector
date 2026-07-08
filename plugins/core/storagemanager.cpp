@@ -83,10 +83,17 @@ void StorageManager::saveSettings()
     // std::as_const гарантирует, что контейнер не сделает глубокую копию
     for (const QVariant &linkVar : std::as_const(m_proxyLinks)) {
         QVariantMap linkMap = linkVar.toMap();
-        QString title = linkMap.value("title").toString();
+        QString title  = linkMap.value("title").toString();
         QString server = linkMap.value("server").toString();
+        bool selected  = linkMap.value("selected").toBool();
         if (!title.isEmpty()) {
-            proxyObj[title] = server;
+            // Создаем вложенный JSON-объект для хранения всех параметров прокси
+            QJsonObject linkDetails;
+            linkDetails["server"] = server;
+            linkDetails["selected"] = selected;
+
+            // Записываем объект под именем прокси (title)
+            proxyObj[title] = linkDetails;
         }
     }
     rootObj["MTProxy"] = proxyObj;
@@ -135,6 +142,7 @@ void StorageManager::setDefaultsLinks()
         QVariantMap map;
         map["title"] = it.key();
         map["server"] = it.value();
+        map["selected"] = false;
         m_proxyLinks.append(map);
     }
     emit proxyLinksChanged(m_proxyLinks);
@@ -152,10 +160,15 @@ void StorageManager::applyProxyLinks(const QJsonObject &proxyObj)
 {
     m_proxyLinks.clear();
     for (auto it = proxyObj.begin(); it != proxyObj.end(); ++it) {
-        if (it.value().isString()) {
+        // Теперь внутри лежит объект, а не строка
+        if (it.value().isObject()) {
+            QJsonObject linkDetails = it.value().toObject();
+
             QVariantMap map;
             map["title"] = it.key();
-            map["server"] = it.value().toString();
+            map["server"] = linkDetails.value("server").toString();
+            map["selected"] = linkDetails.value("selected").toBool(false); // по умолчанию false
+
             m_proxyLinks.append(map);
         }
     }
