@@ -2,27 +2,17 @@
 
 ## 1. Зона ответственности
 
-Core Plugin — центральный C++ модуль, управляющий бизнес-логикой: проверка хранилища, мониторинг сетевой связности, загрузка и парсинг списков прокси, асинхронная проверка серверов через `QtConcurrent`. Предоставляет QML-фронтенду два синглтона (`Core`, `AppController`) и два невидимых внутренних класса (`StorageManager`, `NetworkManager`).
+Core Plugin — центральный C++ модуль, управляющий бизнес-логикой: проверка хранилища, мониторинг сетевой связности, загрузка и парсинг списков прокси, асинхронная проверка серверов через `QtConcurrent`. Предоставляет QML-фронтенду два синглтона (`AppController`, `AndroidUtils`) и два невидимых внутренних класса (`StorageManager`, `NetworkManager`).
 
 Связь C++ ↔ QML:
-- `Core` — глобальный монитор состояния (storage/network), эмитирует `showToastMessage` для UI.
-- `AppController` — основной контроллер: инициализация, загрузка списков, запуск проверки.
-- QML подписывается через `Connections { target: AppController }` на сигналы C++.
+- `AppController` (QML_SINGLETON) — фасад: инициализация, загрузка списков, запуск проверки, состояние storage/network
+- QML подписывается через `Connections { target: AppController }` на сигналы C++
+- Данные прокси-серверов — через `ProxyListModel` (QAbstractListModel), привязанный к `ListView`
 
 ## 2. Структура классов и QML-типов
 
 ```mermaid
 classDiagram
-    class Core {
-        <<QML_SINGLETON>>
-        +bool externalStorageWritable
-        +bool internetConnectivity
-        +checkAppCondition()
-        -checkExternalStorageWritable()
-        -checkInternetConnectivity()
-        -showToastMessage(QString)
-    }
-
     class AppController {
         <<QML_SINGLETON>>
         +bool storageAvailable
@@ -30,47 +20,86 @@ classDiagram
         +int checkProgress
         +int checkTotal
         +QString sourceProxyLists
+        +ProxyListModel* servers
+        +SourceLinkModel* proxySourceLinksModel
         +initialize()
         +refreshServerLists()
         +checkAllServers()
         +cancelCheck()
+        +saveSetting()
         -onProxyChecked(ProxyResult)
-        -proxyListChanged(int)
+        -onListsDownloaded()
+        -onParsed()
     }
 
     class StorageManager {
         -QString m_dataDir
+        -QVariantMap m_appSettings
+        -QVariantList m_proxyListUrl
         +checkAccess()
-        +saveFile() bool
-        +loadFile() QByteArray
-        -accessChecked(bool, QString)
+        +loadSettings()
+        +saveSettings()
+        -saveFile() bool
+        -loadFile() QByteArray
+        -parseJson(QJsonObject)
     }
 
     class NetworkManager {
         -QNetworkAccessManager* m_networkAccessManager
+        -QNetworkReply* m_currentReply
+        -bool m_internetConnectivity
         +checkConnectivity()
         +refreshProxyLists(QString)
-        -connectivityChecked(bool, QString)
-        -proxyChecked(ProxyResult)
-        -batchProxyChecked(List~ProxyResult~)
-        -proxyListChanged(int)
+        -onReplyFinished()
         -checkSingleProxy(QString) ProxyResult
+        -refreshProxyLists(QStringList)
+        -deduplicateProxyList(QString) QStringList
+        -normalizeProxyKey(QString) QString
         -parseReachability() Status
     }
 
-    class ProxyResult {
-        +QString url
-        +int latency
-        +int port
-        +QString typeProxy
-        +QString typeCiphers
-        +QString desc
+    class GenericListModel {
+        <<abstract>>
+        +rowCount() int
+        +data() QVariant
+        #doRowCount() int
+        #doData() QVariant
+        #doRoleNames() QHash
     }
 
-    Core --> AppController : инициализация
-    AppController --> StorageManager : делегирует проверку
-    AppController --> NetworkManager : делегирует сеть
-    NetworkManager ..> ProxyResult : возвращает результат
+    class ProxyListModel {
+        +append(ProxyResult)
+        +clear()
+        +updateLatency(int, int)
+        +PingRole, PortRole, ServerRole, SecretRole
+    }
+
+    class SourceLinkModel {
+        +append(ProxySourceLink)
+        +clear()
+        +TitleRole, ServerRole
+    }
+
+    class ProxyResult {
+        +int ping
+        +int port
+        +QString server
+        +QString secret
+    }
+
+    class ProxySourceLink {
+        +QString url_title
+        +QString url_server
+    }
+
+    AppController --> StorageManager : владеет
+    AppController --> NetworkManager : владеет
+    AppController --> ProxyListModel : владеет
+    AppController --> SourceLinkModel : владеет
+    ProxyListModel --|> GenericListModel : наследует
+    SourceLinkModel --|> GenericListModel : наследует
+    NetworkManager ..> ProxyResult : возвращает
+    StorageManager ..> ProxySourceLink : использует
 ```
 
 ## 3. Сценарий взаимодействия (Рантайм)
@@ -90,14 +119,21 @@ sequenceDiagram
     NM-->>AC: connectivityChecked(ok, msg)
     AC-->>QML: showToastMessage(msg) / errorOccurred(msg)
 
-    alt Debug mode
+    alt Settings loaded
+        SM-->>AC: appSettings(map)
         AC->>NM: refreshProxyLists(urlSourceList)
         NM->>NET: HTTP GET proxy list
-        NET-->>NM: text file
+        NET-->>NM: text/plain
+        NM->>NM: deduplicateProxyList()
         NM-->>AC: proxyListChanged(count)
-        AC-->>QML: onProxyListChanged(count)
         NM->>NM: QtConcurrent::mapped(checkSingleProxy)
         NM-->>AC: proxyChecked(result) [по одному]
+        AC->>AC: onProxyChecked(result) → STUB
+    end
+
+    opt Application suspend
+        QML->>AC: saveSetting()
+        AC->>SM: saveSettings() → STUB
     end
 ```
 
@@ -105,46 +141,11 @@ sequenceDiagram
 
 ---
 
-### [Критичность] КРИТИЧЕСКАЯ: Утечка соединений сигнала в Core::checkInternetConnectivity
-
-- **Локация:** `plugins/core/core.cpp:86-111`
-- **Суть ошибки:** Каждый вызов `checkInternetConnectivity()` создаёт новое `connect()` к `QNetworkInformation::reachabilityChanged`, не отключая предыдущее. Метод вызывается из конструктора и может быть вызван повторно. Это приводит к:
-  1. Множественным срабатываниям лямбды при одном изменении связности
-  2. Утечке памяти лямбд-замыканий
-  3. Потенциальному `use-after-free` при уничтожении `Core` раньше `QNetworkInformation::instance()`
-- **Исправление:** Вынести `connect()` в конструктор, убрать из `checkInternetConnectivity()`. Либо использовать `Qt::SingleShotConnection` (Qt 6.0+) или проверять и дисконнектить перед повторным коннектом.
-
-```cpp
-// В конструкторе, один раз:
-if (QNetworkInformation::instance()) {
-    connect(QNetworkInformation::instance(), &QNetworkInformation::reachabilityChanged,
-            this, &Core::onReachabilityChanged);
-}
-```
-
----
-
-### [Критичность] ВЫСОКАЯ: Дублирование логики (DRY)
-
-- **Локация:** `plugins/core/core.cpp:66-79` и `plugins/core/networkmanager.cpp:191-208`
-- **Суть ошибки:** Switch-блок для маппинга `QNetworkInformation::Reachability → QString` полностью дублируется в двух классах. Нарушение DRY. При добавлении нового типа или смене локализации нужно править в двух местах.
-- **Исправление:** Вынести в статическую функцию или утилитарный заголовок:
-
-```cpp
-// reachability_utils.h
-inline QString reachabilityMessage(QNetworkInformation::Reachability r) {
-    switch (r) { /* ... */ }
-}
-```
-
----
-
 ### [Критичность] ВЫСОКАЯ: Cross-thread сигнал с незарегистрированным типом
 
-- **Локация:** `plugins/core/proxyresult.h:12` и `plugins/core/networkmanager.cpp:173-181`
-- **Суть ошибки:** `ProxyResult` имеет `Q_DECLARE_METATYPE`, но нет вызова `qRegisterMetaType<ProxyResult>()` перед использованием в сигналах через `QtConcurrent::mapped`. В debug-режиме Qt выдаст warning и может потерять аргументы сигнала при跨-поточной передаче.
-- **Исправление:** Добавить в main.cpp или конструктор NetworkManager:
-
+- **Локация:** `plugins/core/networkmanager.cpp:162-177`
+- **Суть ошибки:** `ProxyResult` имеет `Q_DECLARE_METATYPE`, но нет вызова `qRegisterMetaType<ProxyResult>()` перед использованием в сигналах через `QtConcurrent::mapped`. Qt выдаст warning и может потерять аргументы сигнала при跨-поточной передаче.
+- **Исправление:** Добавить в `main.cpp` или конструктор `NetworkManager`:
 ```cpp
 qRegisterMetaType<ProxyResult>("ProxyResult");
 ```
@@ -153,11 +154,11 @@ qRegisterMetaType<ProxyResult>("ProxyResult");
 
 ### [Критичность] ВЫСОКАЯ: Незакрытый QFutureWatcher при повторном вызове
 
-- **Локация:** `plugins/core/networkmanager.cpp:173-181`
-- **Суть ошибки:** `refreshProxyLists(const QStringList&)` создаёт новый `QFutureWatcher` при каждом вызове. Если метод вызван дважды (например, обновление списка), первый watcher продолжает работать в фоне, вызывая `proxyChecked` для старого списка. Также не вызывается `cancel()` на `QFuture` при старой очереди.
-- **Исправление:** Отменять предыдущий watcher перед созданием нового. Хранить указатель на текущий `QFutureWatcher` и вызывать `cancel()` на нём.
-
+- **Локация:** `plugins/core/networkmanager.cpp:158-177`
+- **Суть ошибки:** `refreshProxyLists(const QStringList&)` создаёт новый `QFutureWatcher` при каждом вызове. Если метод вызван дважды, первый watcher продолжает работать, вызывая `proxyChecked` для старого списка. Нет отмены предыдущей очереди.
+- **Исправление:** Отменять предыдущий watcher. Хранить указатель на текущий `QFutureWatcher`:
 ```cpp
+// В networkmanager.h: QFutureWatcher<ProxyResult> *m_currentWatcher = nullptr;
 if (m_currentWatcher) {
     m_currentWatcher->cancel();
     m_currentWatcher->deleteLater();
@@ -167,30 +168,91 @@ m_currentWatcher = new QFutureWatcher<ProxyResult>(this);
 
 ---
 
-### [Критичность] СРЕДНЯЯ: Stub-методы без реализации
+### [Критичность] СРЕДНЯЯ: normaliseProxyKey — мёртвая ветка (copy-paste)
+
+- **Локация:** `plugins/core/networkmanager.cpp:223-224`
+- **Суть ошибки:** Два одинаковых `else if (urlView.startsWith(u"https://t.me?"))` подряд. Вторая ветка никогда не выполняется. Вероятно, предполагалось `https://t.me/proxy?` для другого формата ссылок.
+- **Исправление:** Изменить второе условие или удалить дубликат:
+```cpp
+} else if (urlView.startsWith(u"https://t.me/proxy?")) {
+    paramsPart = urlView.mid(19);
+```
+
+---
+
+### [Критичность] СРЕДНЯЯ: Debug-режим принудительно перезаписывает sourceProxyLists
+
+- **Локация:** `plugins/core/appcontroller.cpp:64-65`
+- **Суть ошибки:** В `refreshServerLists()` блок `#ifdef QT_DEBUG` жёстко перезаписывает `m_sourceProxyLists`, игнорируя значение, установленное пользователем через QML. При сборке Debug пользователь всегда получает RU-список, независимо от настроек.
+- **Исправление:** Использовать debug-значение только как fallback, если список пуст:
+```cpp
+if (m_sourceProxyLists.isEmpty()) {
+#ifdef QT_DEBUG
+    m_sourceProxyLists = "https://raw.githubusercontent.com/kort0881/telegram-proxy-collector/refs/heads/main/proxy_ru.txt";
+#else
+    return;
+#endif
+}
+```
+
+---
+
+### [Критичность] СРЕДНЯЯ: Stub-методы — бизнес-логика не реализована
 
 - **Локация:**
-  - `plugins/core/appcontroller.cpp:48` — `checkAllServers()` пустой
-  - `plugins/core/appcontroller.cpp:49` — `cancelCheck()` пустой
-  - `plugins/core/appcontroller.cpp:88` — `onProxyChecked()` пустой
-  - `plugins/core/networkmanager.cpp:168` — `checkSingleProxy()` возвращает пустой `ProxyResult`
-  - `plugins/core/storagemanager.cpp:48` — `saveFile()` всегда `false`
-  - `plugins/core/storagemanager.cpp:52` — `loadFile()` всегда пустой `QByteArray`
-- **Суть ошибки:** Основная функциональность приложения (проверка прокси, сохранение результатов) не реализована. Код находится в состоянии незавершённого каркаса.
-- **Исправление:** Реализовать логику проверки MTProxy (подключение по протоколу MTProto через сокет), сохранение результатов в JSON/текстовый файл, загрузку из кэша.
+  - `plugins/core/appcontroller.cpp:72` — `checkAllServers()` пуст
+  - `plugins/core/appcontroller.cpp:77` — `cancelCheck()` пуст
+  - `plugins/core/appcontroller.cpp:132` — `onProxyChecked()` пуст
+  - `plugins/core/networkmanager.cpp:153` — `checkSingleProxy()` возвращает пустой `ProxyResult`
+  - `plugins/core/storagemanager.cpp:53` — `saveFile()` всегда `false`
+  - `plugins/core/storagemanager.cpp:87` — `saveSettings()` пуст
+- **Суть ошибки:** Основная функциональность (проверка MTProxy, сохранение настроек) не реализована. Приложение — незавершённый каркас.
+- **Исправление:** Реализовать:
+  1. `checkSingleProxy()` — TCP-connect к серверу:порту с таймаутом, замер latency
+  2. `saveSettings()` — запись JSON в `AppDataLocation/settings.json`
+  3. `onProxyChecked()` — добавление результата в `ProxyListModel`
 
 ---
 
-### [Критичность] СРЕДНЯЯ: Неиспользуемый enum SenderTypes
+### [Критичность] СРЕДНЯЯ: initialize() вызывает refreshServerLists() преждевременно
 
-- **Локация:** `plugins/core/sendertypes.h`
-- **Суть ошибки:** Enum `SenderTypes` объявлен, но нигде не используется. Мёртвый код.
-- **Исправление:** Удалить файл или использовать по назначению.
+- **Локация:** `plugins/core/appcontroller.cpp:53-54`
+- **Суть ошибки:** `refreshServerLists()` вызывается сразу после `checkAccess()`/`checkConnectivity()`, но до того, как придут асинхронные ответы. Оба флага `m_storageAvailable` и `m_internetAvailable` ещё `false`, поэтому метод сразу выходит. Вызов — мёртвый код.
+- **Исправление:** Перенести `refreshServerLists()` в колбэк загрузки настроек:
+```cpp
+connect(m_storage, &StorageManager::settingsLoaded, this, [this]() {
+    refreshServerLists();
+});
+```
 
 ---
 
-### [Критичность] СРЕДНЯЯ: Отсутствует #include <QTime>
+### [Критичность] СРЕДНЯЯ: Отсутствует `#include <QTime>`
 
-- **Локация:** `plugins/core/core.cpp` и `plugins/androidutils/androidutils.cpp`
-- **Суть ошибки:** Используется `QTime::currentTime()` без `#include <QTime>`. На некоторых платформах/компиляторах может не собраться.
-- **Исправление:** Добавить `#include <QTime>`.
+- **Локация:** `plugins/core/appcontroller.cpp:12`, `plugins/androidutils/androidutils.cpp:59`
+- **Суть ошибки:** Используется `QTime::currentTime()` без `#include <QTime>`. На некоторых платформах может не собраться.
+- **Исправление:** Добавить `#include <QTime>` в оба файла.
+
+---
+
+### [Критичность] СРЕДНЯЯ: Отсутствует `#include <QDir>` в storagemanager.cpp
+
+- **Локация:** `plugins/core/storagemanager.cpp:33`
+- **Суть ошибки:** Используется `QDir dir(m_dataDir)` без `#include <QDir>`. Работает за счёт транзитивных включений, но не гарантировано.
+- **Исправление:** Добавить `#include <QDir>`.
+
+---
+
+### [Критичность] НИЗКАЯ: handleCommonResult смешивает toast и error
+
+- **Локация:** `plugins/core/appcontroller.cpp:114-117`
+- **Суть ошибки:** `handleCommonResult(true, ...)` шлёт `showToastMessage`, но "AppDataLocation is writable" — не повод для Toast-уведомления пользователю. Это debug-информация.
+- **Исправление:** Использовать `qDebug` для информационных сообщений, Toast — только для значимых событий.
+
+---
+
+### [Критичность] НИЗКАЯ: assets/settings.json не используется
+
+- **Локация:** `assets/settings.json`
+- **Суть ошибки:** Файл лежит в активах, но `StorageManager` читает только из `AppDataLocation/settings.json`. При первом запуске используются дефолты из кода (`setDefaults()`), а не из этого файла. Файл — мёртвый груз.
+- **Исправление:** Либо удалить, либо читать embedded-ресурс как fallback при пустом `AppDataLocation/settings.json`.

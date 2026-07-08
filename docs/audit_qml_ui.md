@@ -2,7 +2,7 @@
 
 ## 1. Зона ответственности
 
-QML-слой отвечает за отрисовку UI, обработку касаний и визуализацию данных от C++ бэкенда. Состоит из главного окна (`Main.qml`), кастомных компонентов (`MButton`, `MCard`, `MDelegate`, `MListView`, `NavigationPane`) и двух неиспользуемых компонентов из `plugins/ui/`.
+QML-слой отвечает за отрисовку UI, обработку касаний и визуализацию данных от C++ бэкенда. Состоит из главного окна (`Main.qml`) и кастомных компонентов (`MButton`, `MCard`, `MDelegate`, `MListView`, `NavigationPane`). Компоненты `MButton`, `MCard`, `MListView`, `NavigationPane` декларированы, но **не используются** в текущей версии `Main.qml`.
 
 Все C++ синглтоны импортируются и доступны глобально. Связь с C++ — через `Connections { target: AppController }` и прямые вызовы `AppController.initialize()`, `AndroidUtils.showToast()`.
 
@@ -15,45 +15,53 @@ classDiagram
         +bool isDark
         +string appVersion
         +bool isDebugMode
-        +ListModel model
-        +showAnimation
+        +string buildQtVersion
+        +bool isMobile
+        +property font buiraFont, droidFont, digitalFont, baseFont
+        +ProxyListModel servers (from AppController)
+        +showAnimation (SequentialAnimation)
     }
 
     class MDelegate {
-        +string domainName
-        +int ping, port, mtype
-        +bool isFavorite
-        +string secret, tgUrl
-        +getProxyType(index) string
+        +int ping, port
+        +string server, secret
+        +string tgUrl
+        +color themeRed, themeGreen
+        +background: Rectangle + ElevationEffect + Ripple
     }
 
     class MButton {
         +bool effectsOn
         +real antimationTime
-        +states: buttonDown, buttonUp
+        +states: buttonDown (scale 0.7), buttonUp (scale 1.0)
+        +MultiEffect shadow
     }
 
     class MCard {
         +string title, subtitle
+        +real baseSize
         +alias contentItemData
-        +ColumnLayout contentColumn
     }
 
     class MListView {
+        <<broken: undefined identifiers>>
         +Rectangle highlight
         +ScrollIndicator
     }
 
     class NavigationPane {
+        <<broken: out-of-scope appWnd>>
         +ToolButton[] filterButtons
+        +onClicked copy-paste bug
     }
 
-    ApplicationWindow --> MDelegate : delegate
-    ApplicationWindow --> MListView : listView
-    ApplicationWindow --> NavigationPane : (не используется)
-    ApplicationWindow ..> Core : <<singleton>>
-    ApplicationWindow ..> AppController : <<singleton>>
-    ApplicationWindow ..> AndroidUtils : <<singleton>>
+    ApplicationWindow --> MDelegate : delegate (используется)
+    ApplicationWindow ..> MListView : (не используется)
+    ApplicationWindow ..> MButton : (не используется)
+    ApplicationWindow ..> MCard : (не используется)
+    ApplicationWindow ..> NavigationPane : (не используется)
+    ApplicationWindow ..> AppController : <<singleton C++>>
+    ApplicationWindow ..> AndroidUtils : <<singleton C++>>
 ```
 
 ## 3. Сценарий взаимодействия (Рантайм)
@@ -76,7 +84,6 @@ sequenceDiagram
 
     alt Proxy list loaded
         AC-->>AppWnd: onProxyListChanged(count)
-        AppWnd->>AppWnd: model обновляется (нока нет динамики)
     end
 
     alt Toast message
@@ -87,6 +94,10 @@ sequenceDiagram
     alt Tap Share on delegate
         Delegate->>Delegate: Qt.openUrlExternally(tgUrl)
     end
+
+    alt Application suspended
+        AppWnd->>AC: saveSetting()
+    end
 ```
 
 ## 4. Аудит кода (Ошибки, DRY, Нарушения)
@@ -96,91 +107,107 @@ sequenceDiagram
 ### [Критичность] КРИТИЧЕСКАЯ: Несуществующие идентификаторы в MListView
 
 - **Локация:** `app/qml/MListView.qml:8-12`
-- **Суть ошибки:** Используются идентификаторы `darkMode`, `solarizedBase03`, `solarizedBase0`, `solarizedBase2`, `solarizedBase02`, которые не определены ни в самом компоненте, ни в импортированных модулях. QML-движок выдаст runtime-ошибки привязки, и компонент не сможет отрисоваться корректно.
-- **Исправление:** Определить свойства в `MListView` или удалить ссылки:
-
+- **Суть ошибки:** Используются идентификаторы `darkMode`, `solarizedBase03`, `solarizedBase0`, `solarizedBase2`, `solarizedBase02`, которые не определены ни в самом компоненте, ни в импортированных модулях. QML-движок выдаст runtime-ошибки привязки.
+- **Исправление:** Определить свойства в `MListView` или удалить файл (не используется):
 ```qml
 property bool darkMode: false
 readonly property color solarizedBase03: "#002b36"
-readonly property color solarizedBase0: "#839496"
-// ... etc
 ```
 
 ---
 
-### [Критичность] ВЫСОКАЯ: Dead code — MainTest.qml никогда не загружается
+### [Критичность] ВЫСОКАЯ: Dead code — MainTest.qml (опечатка QT_DEBUG1)
 
-- **Локация:** `app/main.cpp:125-129`
-- **Суть ошибки:** Условие `#ifdef QT_DEBUG1` — опечатка. Макрос `QT_DEBUG1` никогда не определён, поэтому `MainTest.qml` никогда не загружается, даже в Debug-сборке. Должно быть `QT_DEBUG`.
-- **Исправление:** Заменить `QT_DEBUG1` на `QT_DEBUG`.
-
----
-
-### [Критичность] ВЫСОКАЯ: Дублирование кода между Main.qml и MainTest.qml
-
-- **Локация:** `app/qml/Main.qml` и `app/qml/MainTest.qml`
-- **Суть ошибки:** Около 50 строк дублируются (свойства `screenWidth`, `screenHeight`, `isMobile`, `baseSpacing`, `padding`, `m_radius`, Solarized цвета и т.д.). Нарушение DRY. Изменение темы/стиля требует правки двух файлов.
-- **Исправление:** Вынести общие свойства и стили в отдельный QML-файл (например, `AppTheme.qml`) и переиспользовать через `include` или property-alias.
-
----
-
-### [Критичность] ВЫСОКАЯ: Несуществующее свойство isDebugModeOFF
-
-- **Локация:**
-  - `plugins/ui/MemoCard.qml:28`
-  - `plugins/ui/SimpleFlip.qml:27`
-- **Суть ошибки:** Обращение к `appWnd.isDebugModeOFF`. Такого свойства нет (есть `isDebugMode`). В runtime — undefined, блок `if` никогда не выполняется.
-- **Исправление:** Заменить на `appWnd.isDebugMode` или удалить блок.
+- **Локация:** `app/main.cpp:129`
+- **Суть ошибки:** Условие `#ifdef QT_DEBUG1` — опечатка. Макрос никогда не определён. Должно быть `QT_DEBUG`. Если исправить, загрузится несуществующий модуль (MainTest.qml удалён из репозитория).
+- **Исправление:** Удалить блок `#ifdef QT_DEBUG1` полностью:
+```cpp
+engine.loadFromModule("io.github.zanyxdev.mtproxyinspector", "Main");
+```
 
 ---
 
 ### [Критичность] ВЫСОКАЯ: NavigationPane — все onClicked логируют "Россия"
 
-- **Локация:** `app/qml/NavigationPane.qml:104-105, 125`
-- **Суть ошибки:** Кнопки "Все" и "Настройки" в обработчике `onClicked` пишут `"Фильтр: Россия"` — copy-paste ошибка.
-- **Исправление:** Заменить строки логов на корректные:
+- **Локация:** `app/qml/NavigationPane.qml:43-47, 64-67, 85, 105, 125`
+- **Суть ошибки:** Кнопки "Все" (строка 105) и "Настройки" (строка 125) в обработчике `onClicked` пишут `"Фильтр: Россия"` — copy-paste ошибка. Также "Избранное" (строка 44) тоже пишет "Россия".
+- **Исправление:** Заменить строки логов на корректные.
 
+---
+
+### [Критичность] ВЫСОКАЯ: NavigationPane ссылается на appWnd вне области видимости
+
+- **Локация:** `app/qml/NavigationPane.qml:16`
+- **Суть ошибки:** `Material.background: appWnd.Material.background` — `appWnd` определён в `Main.qml` и недоступен из `NavigationPane`. При инстанцировании будет runtime-ошибка.
+- **Исправление:** Передавать цвет фон через свойство:
 ```qml
-// кнопка Все: console.log("Фильтр: Все")
-// кнопка Настройки: console.log("Настройки")
+property color backgroundColor: Material.color(Material.Background)
+Material.background: root.backgroundColor
 ```
+
+---
+
+### [Критичность] СРЕДНЯЯ: RoundButton (cloud-refresh) не имеет onClicked
+
+- **Локация:** `app/qml/Main.qml:242-253`
+- **Суть ошибки:** Кнопка обновления списка прокси отображается, но не обрабатывает нажатия. Пользователь тапает — ничего не происходит.
+- **Исправление:** Добавить `onClicked: AppController.refreshServerLists()`.
+
+---
+
+### [Критичность] СРЕДНЯЯ: MButton — dual animation (states/behavior)
+
+- **Локация:** `app/qml/MButton.qml:41-71`
+- **Суть ошибки:** Одновременно используются `states`+`transitions` (scale 0.7→1.0) И `Behavior on scale` на то же свойство. Механизмы конфликтуют — анимация может дёргаться.
+- **Исправление:** Убрать `Behavior on scale` (строки 66-71), т.к. scale уже управляется через `states`/`transitions`.
 
 ---
 
 ### [Критичность] СРЕДНЯЯ: Нет адаптивности под экраны — hardcoded 360×720
 
 - **Локация:** `app/qml/Main.qml:90-91`
-- **Суть ошибки:** Размер окна жёстко зафиксирован 360×720. На современных Android-устройствах с соотношением сторон 19.5:9, 20:9 и т.д. либо появятся чёрные полосы, либо содержимое будет обрезано (зависит от `flags`). При этом `visibility: Window.FullScreen` для mobile — окно растягивается, но контент ориентируется на эти 360×720.
-- **Исправление:** Использовать `Screen.width`/`Screen.height` для динамического размера, либо применить Fluid Layout с пропорциональными привязками.
+- **Суть ошибки:** Размер окна жёстко зафиксирован. На Android-устройствах с соотношением 19.5:9 контент будет обрезан или появятся поля.
+- **Исправление:** Использовать `Screen.width`/`Screen.height` или Fluid Layout.
 
 ---
 
-### [Критичность] СРЕДНЯЯ: MDelegate.tgUrl — binding пересоздаётся на каждое изменение свойств
+### [Критичность] СРЕДНЯЯ: MDelegate.tgUrl — binding пересоздаётся на каждое изменение
 
-- **Локация:** `app/qml/MDelegate.qml:21`
-- **Суть ошибки:** `property string tgUrl: "tg://proxy?server="+domainName+"&port="+port+"&secret="+secret` — это QML-биндинг, пересчитывающий URL при изменении любого из четырёх свойств. Для статических данных не критично, но при подгрузке из C++ модели будет пересоздаваться многократно.
-- **Исправление:** Использовать Qt 6.4+ inline binding или функцию-геттер, если URL нужен только по запросу.
+- **Локация:** `app/qml/MDelegate.qml:17`
+- **Суть ошибки:** `property string tgUrl: "tg://proxy?server="+server+"&port="+port+"&secret="+secret` — QML-биндинг пересчитывает URL при изменении любого из свойств. Для статических данных не критично, но при массовом обновлении модели может быть дорого.
+- **Исправление:** Использовать функцию-геттер:
+```qml
+function getTgUrl() { return "tg://proxy?server="+server+"&port="+port+"&secret="+secret; }
+```
 
 ---
 
-### [Критичность] СРЕДНЯЯ: MDelegate.getProxyType — дублирование qsTr
+### [Критичность] НИЗКАЯ: Redundant enum OR в verticalAlignment
 
-- **Локация:** `app/qml/MDelegate.qml:163-168`
-- **Суть ошибки:** Строки локализации `"Socks5"`, `"Padding"`, `"FakeTls"`, `"Unknow"` (опечатка: `Unknow` → `Unknown`) определены прямо в функции. Не вынесены в отдельные константы/свойства.
-- **Исправление:** Вынести в свойства компонента, исправить опечатку.
+- **Локация:** `app/qml/Main.qml:288`
+- **Суть ошибки:** `verticalAlignment: Text.AlignVCenter | Qt.AlignVCenter` — OR двух одинаковых констант. `Qt.AlignVCenter` избыточен.
+- **Исправление:** Оставить `Text.AlignVCenter`.
+
+---
+
+### [Критичность] НИЗКАЯ: MButton — опечатка в имени свойства
+
+- **Локация:** `app/qml/MButton.qml:9`
+- **Суть ошибки:** `property real antimationTime` — опечатка, должно быть `animationTime`.
+- **Исправление:** Переименовать в `animationTime`.
 
 ---
 
 ### [Критичность] НИЗКАЯ: Неиспользуемые QML-компоненты
 
-- **Локация:** `plugins/ui/` — `MemoCard.qml`, `SimpleFlip.qml`
-- **Суть ошибки:** Модуль `ui` закомментирован в `plugins/CMakeLists.txt`, компоненты нигде не используются. При этом в `SimpleFlip.qml` рекурсивная загрузка через `Loader { source: (root.useShader ? "ShaderFlip.qml" : "SimpleFlip.qml") }` — при `useShader=false` грузит саму себя, что потенциально ведёт к бесконечной рекурсии.
-- **Исправление:** Либо удалить, либо раскомментировать и доработать. Убрать самозагрузку из Loader.
+- **Локация:** `app/qml/MButton.qml`, `MCard.qml`, `MListView.qml`, `NavigationPane.qml`
+- **Суть ошибки:** Четыре из пяти QML-компонентов не используются в `Main.qml`. Кодовая база содержит мёртвый код.
+- **Исправление:** Удалить неиспользуемые компоненты или задействовать их в UI.
 
 ---
 
-### [Критичность] НИЗКАЯ: Game-ориентированные тесты из другого проекта
+### [Критичность] НИЗКАЯ: Закомментированный код в Connections
 
-- **Локация:** `tests/auto/tst_boardgenerator/`, `tests/auto/tst_imagedatamanager/`
-- **Суть ошибки:** Тесты ссылаются на классы `BoardGenerator` и `ImageDataManager`, которых нет в этом проекте. Очевидно, скопированы из проекта `MemoPvP`. Подключение тестов закомментировано, но файлы остались.
-- **Исправление:** Удалить файлы или заменить на актуальные тесты для MTProxyInspector.
+- **Локация:** `app/qml/Main.qml:346-349`
+- **Суть ошибки:** Закомментированный обработчик `onProxyUrlListChanged` со ссылкой на `Core.proxyUrlList` — несуществующий объект/свойство. Оставлен как напоминание, но загромождает код.
+- **Исправление:** Удалить блок комментария.
