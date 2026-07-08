@@ -357,5 +357,15 @@ ApplicationWindow {
             AndroidUtils.showToast(message, false)
         }
     }
-
+    Connections {
+        target: Qt.application
+        function onStateChanged() {
+            if (Qt.application.state === Qt.ApplicationSuspended) {
+                // Пользователь переключился на другое приложение.
+                // Сохраняем все данные здесь!
+                console.log(`Current application state ${Qt.application.state}`);
+                AppController.saveSetting();
+            }
+        }
+    }
 }
