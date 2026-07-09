@@ -319,7 +319,10 @@ ApplicationWindow {
                     model.selected = checked
                 }
             }
-        }    
+        }
+        onClosed: {
+            console.log("proxyMenu closed")
+        }
     }
     SequentialAnimation {
         id: showAnimation
