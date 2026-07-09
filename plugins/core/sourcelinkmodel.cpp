@@ -1,5 +1,3 @@
-#include <QVariantMap>
-
 // sourcelinkmodel.cpp
 #include "sourcelinkmodel.h"
 

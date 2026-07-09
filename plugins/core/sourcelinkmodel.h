@@ -2,12 +2,15 @@
 #include <QAbstractListModel>
 #include <QList>
 #include <QVariantList>
+#include <QVariantMap>
+#include <QtQml>
 
 #include "proxysourcelink.h"
 #include "genericlistmodel.h"
 
 class SourceLinkModel : public GenericListModel {
     Q_OBJECT
+    QML_ELEMENT
     Q_DISABLE_COPY_MOVE(SourceLinkModel)
 
 public:

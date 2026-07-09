@@ -1,11 +1,22 @@
 #pragma once
 #include <QAbstractListModel>
+#include <QtQml>
 #include <QList>
 #include "proxyresult.h"
 #include "genericlistmodel.h"
 
+/**
+ * @brief The ProxyListModel class
+ * @note Предупреждение [unresolved-type] возникает из-за того,
+ * что анализатор QML (QML linter) не видит тип ProxyListModel
+ * на стороне QML, несмотря на то, что AppController объявлен
+ * как QML_ELEMENT.
+ * Чтобы QML распознал этот тип в свойствах Q_PROPERTY,
+ * класс ProxyListModel должен быть также экспонирован в систему типов QML.
+ */
 class ProxyListModel : public GenericListModel {
     Q_OBJECT
+    QML_ELEMENT
     Q_DISABLE_COPY_MOVE(ProxyListModel)
 
 public:
