@@ -208,7 +208,7 @@ ApplicationWindow {
             themeGreen:appWnd.solarizedGreen
             width: listView.width -16
 
-            font.family: appWnd.droidFont.name            
+            font.family: appWnd.droidFont.name
         }
 
         leftMargin: 8
@@ -240,8 +240,9 @@ ApplicationWindow {
     }
 
     RoundButton{
-        implicitWidth: 56
-        implicitHeight: 56
+        id:fabButton
+        implicitWidth: 64
+        implicitHeight: 64
         icon.source:  "qrc:/qt/qml/assets/images/cloud-refresh.png"
         //icon.color:"transparent"
         anchors{
@@ -250,6 +251,11 @@ ApplicationWindow {
             margins: 16
         }
         Material.elevation: 4
+        // При нажатии открываем меню со списком
+        onClicked: {
+            console.log(`proxyMenu.open()`)
+            proxyMenu.open()
+        }
     }
     footer: ToolBar{
         id:footterToolBar
@@ -304,6 +310,40 @@ ApplicationWindow {
     }
 
     //--------------------- non Visual items -------------------------------------
+    Menu {
+        id: proxyMenu
+        // Позиционируем меню над кнопкой FAB
+        x: fabButton.x - width + fabButton.width
+        y: fabButton.y - height - 8
+        width: 220
+        // Ограничиваем максимальную высоту, чтобы меню не вылезало за экран
+        height: Math.min(contentHeight, 300)
+
+        // Используем ListView внутри Menu для отображения элементов модели
+        contentItem: ListView {
+            model: AppController.sourceLinksModel // Ваша C++ модель
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+
+            delegate: MenuItem {
+                width: parent.width
+                text: model.title // Роль 'title' из вашей C++ модели
+                checkable: true
+                checked: model.selected // Роль 'selected' из вашей C++ модели
+
+                // Отслеживаем клик по элементу списка
+                onTriggered: {
+                    // Инвертируем состояние в C++ модели (нужно реализовать setData в C++)
+                    model.selected = checked
+                }
+            }
+
+            // Добавляем полосу прокрутки, если элементов много
+            ScrollBar.vertical: ScrollBar {
+                policy: ScrollBar.AsNeeded
+            }
+        }
+    }
     SequentialAnimation {
         id: showAnimation
 
