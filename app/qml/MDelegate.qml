@@ -7,12 +7,15 @@ import QtQuick.Layouts
 
 ItemDelegate {
     id:root
+    font.family: fontFamily
+
     // Строгая типизация данных из C++ модели (Qt 6 best practice)
 
     required property int ping
     required property int port
     required property string server
     required property string secret
+    required property string fontFamily
 
     property string tgUrl:"tg://proxy?server="+server+"&port="+port+"&secret="+secret
 
@@ -122,7 +125,7 @@ ItemDelegate {
         layer.enabled: root.Material.elevation > 0
         layer.smooth: true
         layer.effect: ElevationEffect {
-            elevation: root.Material.elevation
+            elevation: Material.elevation
             fullWidth: true
 
         }

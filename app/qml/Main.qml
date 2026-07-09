@@ -191,14 +191,10 @@ ApplicationWindow {
 
         delegate:MDelegate{
             required property int index
-            Material.elevation: 2
-            // Явный фон обязателен для корректной отрисовки тени
-            Material.background: appWnd.Material.background
-            width: listView.width -16
-
-            font.family: appWnd.droidFont.name
             themeRed:MColors.solarizedRed
             themeGreen:MColors.solarizedGreen
+            fontFamily: droidFont.name
+            width: ListView.view.width - 16
         }
 
         leftMargin: 8
@@ -231,16 +227,18 @@ ApplicationWindow {
 
     RoundButton{
         id:fabButton
-        implicitWidth: 64
-        implicitHeight: 64
+        implicitWidth: 56
+        implicitHeight: 56
         icon.source:  "qrc:/qt/qml/assets/images/cloud-refresh.png"
+        icon.height:24
+        icon.width: 24
         //icon.color:"transparent"
         anchors{
             bottom: parent.bottom
             right: parent.right
             margins: 16
         }
-        Material.elevation: 4
+        Material.elevation: fabButton.down ? 6 : 2
         // При нажатии открываем меню со списком
         onClicked: {
             console.log(`proxyMenu.open()`)
@@ -302,35 +300,31 @@ ApplicationWindow {
     //--------------------- non Visual items -------------------------------------
     Menu {
         id: proxyMenu
-        // Позиционируем меню над кнопкой FAB
         x: fabButton.x - width + fabButton.width
         y: fabButton.y - height - 8
         width: 220
-        // Ограничиваем максимальную высоту, чтобы меню не вылезало за экран
-        height: Math.min(contentHeight, 300)
+        height: Math.min(implicitContentHeight, 300)
 
-        // Используем ListView внутри Menu для отображения элементов модели
-        contentItem: ListView {
-            model: AppController.sourceLinksModel // Ваша C++ модель
-            clip: true
-            boundsBehavior: Flickable.StopAtBounds
-
+        Instantiator {
+            model: AppController.sourceLinksModel
+            onObjectAdded: (index, object) => proxyMenu.insertItem(index, object)
+            onObjectRemoved: (index, object) => proxyMenu.removeItem(object)
             delegate: MenuItem {
+                required property var model
                 width: parent.width
-                text: model.title // Роль 'title' из вашей C++ модели
+                text: model.title
                 checkable: true
-                checked: model.selected // Роль 'selected' из вашей C++ модели
-
-                // Отслеживаем клик по элементу списка
+                checked: model.selected
                 onTriggered: {
-                    // Инвертируем состояние в C++ модели (нужно реализовать setData в C++)
                     model.selected = checked
                 }
             }
-
-            // Добавляем полосу прокрутки, если элементов много
-            ScrollBar.vertical: ScrollBar {
-                policy: ScrollBar.AsNeeded
+        }
+        Component.onCompleted: {
+            if  (appWnd.isDebugMode){
+                let mCount = AppController.sourceLinksModel.rowCount()
+                console.log(`proxyMenu size: [${proxyMenu.width}w, ${proxyMenu.height}h]`)
+                console.log(`AppController.sourceLinksModel.rowCount: [${mCount}]`)
             }
         }
     }
@@ -389,11 +383,9 @@ ApplicationWindow {
     }
     Connections {
         target: Qt.application
-        function onStateChanged() {
-            if (Qt.application.state === Qt.ApplicationSuspended) {
-                // Пользователь переключился на другое приложение.
-                // Сохраняем все данные здесь!
-                console.log(`Current application state ${Qt.application.state}`);
+        function onStateChanged(state) {
+            if (state === Qt.ApplicationSuspended) {
+                console.log(`Current application state ${state}`);
                 AppController.saveSetting();
             }
         }

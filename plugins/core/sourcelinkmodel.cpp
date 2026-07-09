@@ -42,8 +42,8 @@ int SourceLinkModel::doRowCount() const {
 
 QHash<int, QByteArray> SourceLinkModel::doRoleNames() const {
     return {
-        {TitleRole, "url_title"},
-        {ServerRole, "url_server"},
+        {TitleRole, "title"},
+        {ServerRole, "server"},
         {SelectedRole, "selected"}
     };
 }
