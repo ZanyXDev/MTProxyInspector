@@ -63,20 +63,10 @@ ApplicationWindow {
     Material.theme: isDark ? Material.Dark : Material.Light
 
     // 🔹 Solarized цвета через Material attached properties
-    Material.background: isDark ? "#002b36" : "#fdf6e3" // base03 / base3
-    Material.foreground: isDark ? "#839496" : "#657b83" // base0  / base00
-    Material.primary:    isDark ? "#2aa198" : "#268bd2" // cyan   / blue
-    Material.accent:     isDark ? "#cb4b16" : "#dc322f" // orange / red
-
-    readonly property color solarizedYellow: "#b58900"
-    readonly property color solarizedOrange: "#cb4b16"
-    readonly property color solarizedRed: "#dc322f"
-    readonly property color solarizedMagenta: "#d33682"
-    readonly property color solarizedViolet: "#6c71c4"
-    readonly property color solarizedBlue: "#268bd2"
-    readonly property color solarizedCyan: "#2aa198"
-    readonly property color solarizedGreen: "#859900"
-
+    Material.background: isDark ? MColors.solarizedBase03 : MColors.solarizedBase3
+    Material.foreground: isDark ? MColors.solarizedBase0 : MColors.solarizedBase00
+    Material.primary:    isDark ? MColors.solarizedCyan : MColors.solarizedBlue
+    Material.accent:     isDark ? MColors.solarizedOrange : MColors.solarizedRed
 
     // ----- Signal declarations
 
@@ -204,11 +194,11 @@ ApplicationWindow {
             Material.elevation: 2
             // Явный фон обязателен для корректной отрисовки тени
             Material.background: appWnd.Material.background
-            themeRed:appWnd.solarizedRed
-            themeGreen:appWnd.solarizedGreen
             width: listView.width -16
 
             font.family: appWnd.droidFont.name
+            themeRed:MColors.solarizedRed
+            themeGreen:MColors.solarizedGreen
         }
 
         leftMargin: 8
