@@ -319,14 +319,7 @@ ApplicationWindow {
                     model.selected = checked
                 }
             }
-        }
-        Component.onCompleted: {
-            if  (appWnd.isDebugMode){
-                let mCount = AppController.sourceLinksModel.rowCount()
-                console.log(`proxyMenu size: [${proxyMenu.width}w, ${proxyMenu.height}h]`)
-                console.log(`AppController.sourceLinksModel.rowCount: [${mCount}]`)
-            }
-        }
+        }    
     }
     SequentialAnimation {
         id: showAnimation
