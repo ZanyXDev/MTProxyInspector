@@ -122,7 +122,8 @@ void StorageManager::setDefaultsApp()
 {
     m_appSettings["DarkMode"] = true;
     m_appSettings["PingTest"] = true;
-    m_appSettings["MtProxyTest"] = false;
+    m_appSettings["MTProxyTest"] = false;
+    m_appSettings["EnableDebugLog"] = false;
 
     emit appSettingsChanged( m_appSettings );
 }
@@ -152,7 +153,8 @@ void StorageManager::applyAppSettings(const QJsonObject &appObj)
 {
     m_appSettings["DarkMode"] = appObj.value("DarkMode").toBool(true);
     m_appSettings["PingTest"] = appObj.value("PingTest").toBool(true);
-    m_appSettings["MtProxyTest"] = appObj.value("MtProxyTest").toBool(false);
+    m_appSettings["MTProxyTest"] = appObj.value("MTProxyTest").toBool(false);
+    m_appSettings["EnableDebugLog"] = appObj.value("EnableDebugLog").toBool(false);
     emit appSettingsChanged(m_appSettings);
 }
 
