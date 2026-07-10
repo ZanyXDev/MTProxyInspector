@@ -10,6 +10,7 @@
 NetworkManager::NetworkManager(QObject *parent)
     : QObject(parent)
 {
+    qRegisterMetaType<ProxyResult>();
     if (QNetworkInformation::instance()) {
         connect(QNetworkInformation::instance(), &QNetworkInformation::reachabilityChanged,
                 this, [this](QNetworkInformation::Reachability newReachability) {
