@@ -36,23 +36,6 @@ ApplicationWindow {
     property real  padding: 16
     property real  m_radius: 12
 
-    property FontLoader buiraFont: FontLoader {
-        id: buiraFont
-        source: "qrc:/qt/qml/assets/fonts/Buira/Buira.otf"
-    }
-    property FontLoader droidFont: FontLoader {
-        id: droidFont
-        source: "qrc:/qt/qml/assets/fonts/droidsansmono.ttf"
-    }
-    property FontLoader digitalFont: FontLoader {
-        id: digitalFont
-        source: "qrc:/qt/qml/assets/fonts/681-font.otf"
-    }
-    property FontLoader baseFont: FontLoader {
-        id: baseFont
-        source: "qrc:/qt/qml/assets/fonts/nasalization-rg.otf"
-    }
-
     property string sourceTitle:qsTr("Не выбран")
 
     // -------------------- Глобальные стиль --------------------------------
@@ -117,7 +100,7 @@ ApplicationWindow {
 
                 text: qsTr("Тест MTProxy для Телеграм")
                 font{
-                    family: appWnd.droidFont.name
+                    family: MFonts.droidFont.name
                     pixelSize: 18
                     bold:true
                 }
@@ -193,7 +176,11 @@ ApplicationWindow {
             required property int index
             themeRed:MColors.solarizedRed
             themeGreen:MColors.solarizedGreen
-            fontFamily: droidFont.name
+            font{
+                family: MFonts.digitalFont.name
+                pixelSize: 11
+                bold: true
+            }
             width: ListView.view.width - 16
         }
 
@@ -275,7 +262,7 @@ ApplicationWindow {
 
                 text: qsTr("v.")+ appWnd.appVersion + " "
                 font{
-                    family: appWnd.digitalFont.name
+                    family: MFonts.digitalFont.name
                     pixelSize: 11
                     bold: true
                 }
@@ -311,7 +298,7 @@ ApplicationWindow {
             onObjectRemoved: (index, object) => proxyMenu.removeItem(object)
             delegate: MenuItem {
                 required property var model
-                width: parent.width
+                width: 220
                 text: model.title
                 checkable: true
                 checked: model.selected

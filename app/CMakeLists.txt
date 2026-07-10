@@ -71,12 +71,16 @@ qt_add_resources(${APP_NAME} "fonts"
 )
 
 set(QML_FILES
-    qml/MColors.qml
     qml/Main.qml
     qml/MDelegate.qml
+    qml/MFonts.qml
+    qml/MColors.qml
 )
 
 set_source_files_properties(qml/MColors.qml
+    PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+
+set_source_files_properties(qml/MFonts.qml
     PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 qt_add_qml_module(${APP_NAME}
