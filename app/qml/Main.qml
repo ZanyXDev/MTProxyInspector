@@ -246,7 +246,7 @@ ApplicationWindow {
         }
     }
     footer: ToolBar{
-        id:footterToolBar
+        id:footerToolBar
         // 0..6 (рекомендуется 2..4 для футеров)
         Material.elevation: 3
 
@@ -267,7 +267,7 @@ ApplicationWindow {
                 Layout.fillHeight: true
             }
             Label {
-                id:appVerTxt
+                id:appVerText
                 z: 1
                 Layout.alignment: Qt.AlignRight
 
@@ -331,7 +331,7 @@ ApplicationWindow {
             duration: 1000
         }
         NumberAnimation {
-            targets: [appVerTxt]
+            targets: [appVerText]
             properties: "opacity"
             from: 0
             to: 0.8
@@ -343,7 +343,7 @@ ApplicationWindow {
             duration: 1000
         }
         NumberAnimation {
-            targets: [footterToolBar]
+            targets: [footerToolBar]
             properties: "opacity"
             from: 0.7
             to: 0.4

@@ -20,7 +20,7 @@ signals:
     void errorMessage( const QString &message );
 
     void appSettingsChanged(const QVariantMap &appSettings);
-    void proxyLinksChanged(const QVariantList &m_proxyLinks);
+    void proxyLinksChanged(const QVariantList &proxyLinks);
 
 private:
     bool m_checkAccess{false};

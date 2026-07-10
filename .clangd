@@ -1,0 +1,16 @@
+CompileFlags:
+  Add:
+    - "-std=c++17"
+    - "-DQT_QML_DEBUG"
+  Remove:
+    - "-W*"
+    - "-f*"
+  CompilationDatabase: build/Desktop-Debug
+
+Diagnostics:
+  Suppress:
+    - "unused-parameter"
+    - "unused-local-typedef"
+
+Index:
+  Background: Build

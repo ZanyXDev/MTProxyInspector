@@ -24,7 +24,7 @@ public:
     explicit SourceLinkModel(QObject *parent = nullptr);
 
 public slots:
-    void setFromList(const QVariantList &m_proxyLinks);
+    void setFromList(const QVariantList &proxyLinks);
     void append(const ProxySourceLink &link);
     void clear();
 protected:

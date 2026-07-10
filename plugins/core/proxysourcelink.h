@@ -1,10 +1,10 @@
 #pragma once
 #include <QMetaType>
 
-struct ProxySourceLink {   
-    QString url_title;
-    QString url_server;
-    bool selected;
+struct ProxySourceLink {
+    QString title;
+    QString server;
+    bool selected = false;
 };
 
 Q_DECLARE_METATYPE(ProxySourceLink)

@@ -101,7 +101,7 @@ void StorageManager::saveSettings()
     QJsonDocument jsonDoc(rootObj);
     QFile file(m_dataDir + "/settings.json");
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QString info = tr("Can't onep file to write: $1/settings.json");
+        QString info = tr("Can't open file to write: $1/settings.json");
         emit errorMessage(info.arg(m_dataDir));
         return;
     }

@@ -34,8 +34,8 @@ void NetworkManager::checkConnectivity()
 
     if (QNetworkInformation::instance()) {
         //Создаем переменные прямо в момент получения результата
-        auto [currentOnline, currentMsg] = parseReachability(QNetworkInformation::instance()->reachability());
-        m_internetConnectivity = currentOnline;
+        auto [online, currentMsg] = parseReachability(QNetworkInformation::instance()->reachability());
+        m_internetConnectivity = online;
         msg = currentMsg;
 
         if (!m_internetConnectivity) {
@@ -218,8 +218,6 @@ QString NetworkManager::normalizeProxyKey(const QString &url)
         paramsPart = urlView.mid(11);
     } else if (urlView.startsWith(u"tg://socks?")) {
         paramsPart = urlView.mid(11);
-    } else if (urlView.startsWith(u"https://t.me?")) {
-        paramsPart = urlView.mid(19);
     } else if (urlView.startsWith(u"https://t.me?")) {
         paramsPart = urlView.mid(19);
     } else {

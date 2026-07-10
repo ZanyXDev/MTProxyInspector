@@ -29,7 +29,7 @@ AppController::AppController(QObject *parent)
     });
 
     connect(m_storage, &StorageManager::appSettingsChanged, this, [this](const QVariantMap &appSettings) {
-        qDebug() << "Recived: appSettingsChanged:" <<appSettings;
+        qDebug() << "Received: appSettingsChanged:" <<appSettings;
     });
 
     connect(m_storage, &StorageManager::proxyLinksChanged, m_sourceLinksModel, &SourceLinkModel::setFromList );
