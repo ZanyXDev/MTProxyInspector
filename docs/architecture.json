@@ -1,0 +1,293 @@
+{
+  "meta": {
+    "schema": "1.0",
+    "project": "MTProxyInspector",
+    "version": "0.1.7",
+    "package": "io.github.zanyxdev.mtproxyinspector",
+    "stack": {
+      "language": "C++17",
+      "ui": "Qt Quick / QML",
+      "qt": "6.11.1",
+      "build": "CMake (3.20+), qt_add_qml_module",
+      "platformTarget": "Android (min SDK 26, target 36)",
+      "devPlatform": "Linux desktop (отладка)"
+    },
+    "description": "Мобильный клиент-тестер MTProxy для Telegram. Проверяет доступность и пинг MTProxy-серверов. Список серверов загружается из внешних raw .txt источников, проверяется через параллельные TCP/ICMP-замеры, результаты показываются в QML ListView.",
+    "generatedAt": "2026"
+  },
+  "groups": {
+    "entry":     { "label": "Запуск / Вход", "color": "#859900" },
+    "qml":       { "label": "QML Frontend",  "color": "#268bd2" },
+    "cpp":       { "label": "C++ Backend",   "color": "#6c71c4" },
+    "data":      { "label": "Данные",        "color": "#cb4b16" },
+    "external":  { "label": "Внешние",       "color": "#d33682" },
+    "platform":  { "label": "Android",       "color": "#2aa198" }
+  },
+  "nodes": [
+    {
+      "id": "entry",
+      "label": "main.cpp",
+      "sub": "точка входа · QGuiApplication",
+      "group": "entry",
+      "file": "app/main.cpp",
+      "type": "C++ entrypoint",
+      "description": "Создаёт QGuiApplication, загружает бэкенд QNetworkInformation (на Linux — 'glib', на Android — default), создаёт QQmlApplicationEngine, передаёт в QML свойства isDebugMode / appVersion / buildQtVersion и загружает модуль io.github.zanyxdev.mtproxyinspector:Main через engine.loadFromModule()."
+    },
+    {
+      "id": "settingsJson",
+      "label": "settings.json",
+      "sub": "AppDataLocation · QStandardPaths",
+      "group": "external",
+      "file": "AppDataLocation/settings.json",
+      "type": "persistence artifact",
+      "description": "JSON-файл настроек в папке приложения (QStandardPaths::AppDataLocation). Секция 'App': DarkMode, PingTest, MTProxyTest, EnableDebugLog. Секция 'MTProxy': словарь title → {server, selected}. Сохраняется QJsonDocument::toJson(Indented)."
+    },
+    {
+      "id": "sourceLists",
+      "label": "telegram-proxy-collector",
+      "sub": "raw .txt · tg://proxy?…",
+      "group": "external",
+      "file": "github.com/kort0881/telegram-proxy-collector",
+      "type": "external data source",
+      "description": "Внешние источники списков прокси — raw .txt с GitHub (kort0881/telegram-proxy-collector). Строка вида tg://proxy?server=…&port=…&secret=… или tg://socks?… . Проходят дедупликацию через NetworkManager.deduplicateProxyList()/normalizeProxyKey()."
+    },
+    {
+      "id": "qmlMain",
+      "label": "Main.qml",
+      "sub": "ApplicationWindow · ListView · ToolBar · FAB · proxyMenu",
+      "group": "qml",
+      "file": "app/qml/Main.qml",
+      "type": "QML root window",
+      "description": "Корневое окно ApplicationWindow. Header ToolBar с меню (Адреса источников, Настройки, тема день/ночь, Справка, О программе), ListView модели AppController.servers (делегат MDelegate), FAB (cloud-refresh) с меню источников через Instantiator + SourceLinkModel, footer ToolBar с версией. Connections к AppController и Qt.application (сохранение при Suspended)."
+    },
+    {
+      "id": "qmlDelegate",
+      "label": "MDelegate.qml",
+      "sub": "карточка: server · ping · port · share",
+      "group": "qml",
+      "file": "app/qml/MDelegate.qml",
+      "type": "QML delegate",
+      "description": "ItemDelegate-карточка прокси: server, ping (зелёный <100 мс, иначе красный), port, кнопка Share → Qt.openUrlExternally('tg://proxy?server=…&port=…&secret=…'). Material.elevation + Ripple."
+    },
+    {
+      "id": "qmlColors",
+      "label": "MColors.qml",
+      "sub": "Singleton · Solarized",
+      "group": "qml",
+      "file": "app/qml/MColors.qml",
+      "type": "QML singleton",
+      "description": "QML_SINGLETON с Solarized-палитрой: Base03 #002b36, Base0 #839496, Cyan #2aa198, Green #859900, Red #dc322f и др. Используется для Material.theme/background/primary/accent в Main.qml и акцентов в MDelegate."
+    },
+    {
+      "id": "qmlFonts",
+      "label": "MFonts.qml",
+      "sub": "Singleton · FontLoader",
+      "group": "qml",
+      "file": "app/qml/MFonts.qml",
+      "type": "QML singleton",
+      "description": "QML_SINGLETON с FontLoader: Buira, Droidsansmono, 681-font (цифровой), nasalization-rg. Шрифты зашиты в ресурсы qrc:/qt/qml/assets/fonts/"
+    },
+    {
+      "id": "appController",
+      "label": "AppController",
+      "sub": "Facade · QML_SINGLETON · владеет 4 модулями",
+      "group": "cpp",
+      "file": "plugins/core/appcontroller.{h,cpp}",
+      "type": "C++ QML_SINGLETON facade",
+      "description": "Единый фасад для QML. Q_PROPERTY: servers (ProxyListModel), sourceLinksModel (SourceLinkModel), storageAvailable, internetAvailable, checkProgress, checkTotal. Q_INVOKABLE: initialize(), refreshServerLists(), checkAllServers(), cancelCheck(), saveSetting(). Сигналы: showToastMessage, proxyListChanged, errorOccurred. Владеет StorageManager, NetworkManager, ProxyListModel, SourceLinkModel."
+    },
+    {
+      "id": "storageManager",
+      "label": "StorageManager",
+      "sub": "FS · settings.json · default links",
+      "group": "cpp",
+      "file": "plugins/core/storagemanager.{h,cpp}",
+      "type": "C++ manager",
+      "description": "Работа с файловой системой. checkAccess() проверяет запись в AppDataLocation, loadSettings()/saveSettings() работают с settings.json, при отсутствии файла — setDefaults() (5 дефолтных URL из kort0881/telegram-proxy-collector). Сигналы: accessChecked, appSettingsChanged, proxyLinksChanged, errorMessage."
+    },
+    {
+      "id": "networkManager",
+      "label": "NetworkManager",
+      "sub": "QNAM · QNetworkInformation · QtConcurrent",
+      "group": "cpp",
+      "file": "plugins/core/networkmanager.{h,cpp}",
+      "type": "C++ manager",
+      "description": "Сеть. QNetworkInformation → reachability (online/disconnected/local/site → parseReachability). Скачивание URL-листов через QNetworkAccessManager (UA Chrome, таймаут 5 с) → onReplyFinished → deduplicateProxyList → параллельная проверка QtConcurrent::mapped → QFuture<ProxyResult>. Сигналы: connectivityChecked, parseProxyListStatus, proxyChecked, proxyListChanged, loadingStatusChanged."
+    },
+    {
+      "id": "proxyListModel",
+      "label": "ProxyListModel",
+      "sub": "roles: ping · port · server · secret",
+      "group": "cpp",
+      "file": "plugins/core/proxylistmodel.{h,cpp}",
+      "type": "C++ model",
+      "description": "Модель проверенных прокси (наследует GenericListModel). append(ProxyResult), clear(), updateLatency(row,ping). Роли: ping, port, server, secret. QML_ELEMENT. Используется как model у ListView в Main.qml."
+    },
+    {
+      "id": "sourceLinkModel",
+      "label": "SourceLinkModel",
+      "sub": "roles: title · server · selected",
+      "group": "cpp",
+      "file": "plugins/core/sourcelinkmodel.{h,cpp}",
+      "type": "C++ model",
+      "description": "Модель ссылок-источников прокси (наследует GenericListModel). setFromList(QVariantList) заполняется по сигналу proxyLinksChanged от StorageManager. Роли: title, server, selected. QML_ELEMENT. Используется в Instantiator меню источников (proxyMenu)."
+    },
+    {
+      "id": "genericListModel",
+      "label": "GenericListModel",
+      "sub": "Template Method · QAbstractListModel",
+      "group": "cpp",
+      "file": "plugins/core/genericlistmodel.{h,cpp}",
+      "type": "C++ abstract base",
+      "description": "Абстрактная база моделей (Template Method): rowCount()/data()/roleNames() делегируются в виртуальные do*() наследников. Q_DISABLE_COPY_MOVE. Наследники: ProxyListModel, SourceLinkModel."
+    },
+    {
+      "id": "proxyResult",
+      "label": "ProxyResult",
+      "sub": "Q_GADGET: ping·port·server·secret",
+      "group": "data",
+      "file": "plugins/core/proxyresult.h",
+      "type": "data struct (Q_GADGET)",
+      "description": "Q_GADGET-структура результата проверки прокси: int ping, int port, QString server, QString secret. Q_DECLARE_METATYPE — передаётся в cross-thread сигналах (QtConcurrent → main thread)."
+    },
+    {
+      "id": "proxySourceLink",
+      "label": "ProxySourceLink",
+      "sub": "struct: title·server·selected",
+      "group": "data",
+      "file": "plugins/core/proxysourcelink.h",
+      "type": "data struct",
+      "description": "Простая структура элемента источника прокси: QString title (имя), QString server (URL), bool selected. Хранится в QList<ProxySourceLink> внутри SourceLinkModel."
+    },
+    {
+      "id": "androidUtils",
+      "label": "AndroidUtils",
+      "sub": "QML_SINGLETON · Toast via JNI",
+      "group": "platform",
+      "file": "plugins/androidutils/androidutils.{h,cpp}",
+      "type": "C++ QML_SINGLETON (Android)",
+      "description": "Мобильный хелпер. showToast(message, isLong) вызывает android.widget.Toast.makeText через QJniObject на main-потоке Android (QNativeInterface::QAndroidApplication::runOnAndroidMainThread); на Desktop — эмуляция через qDebug. Синглтон через QAtomicPointer + приватный конструктор."
+    }
+  ],
+  "edges": [
+    { "id": "e01", "source": "entry", "target": "qmlMain", "label": "loadFromModule('Main')", "description": "main.cpp загружает QML-модуль io.github.zanyxdev.mtproxyinspector:Main." },
+    { "id": "e02", "source": "qmlMain", "target": "qmlColors", "label": "Material.primary / accent", "description": "Main.qml берёт Solarized-цвета из MColors для Material.theme/background/primary/accent." },
+    { "id": "e03", "source": "qmlMain", "target": "qmlFonts", "label": "font.family: MFonts.*", "description": "Main.qml и MDelegate используют шрифты из синглтона MFonts." },
+    { "id": "e04", "source": "qmlMain", "target": "qmlDelegate", "label": "ListView delegate", "description": "ListView отрисовывает каждый прокси через MDelegate." },
+    { "id": "e05", "source": "qmlMain", "target": "appController", "label": "initialize() · saveSetting() · Connections", "description": "QML вызывает методы фасада (initialize, saveSetting) и ловит сигналы (proxyListChanged, showToastMessage) через Connections." },
+    { "id": "e06", "source": "qmlMain", "target": "androidUtils", "label": "Connections → showToast()", "description": "onShowToastMessage → AndroidUtils.showToast(message, false)." },
+    { "id": "e07", "source": "qmlMain", "target": "sourceLinkModel", "label": "proxyMenu: Instantiator model=sourceLinksModel", "description": "FAB открывает меню, пункты строятся из AppController.sourceLinksModel (Instance MenuItem checkable/checked=selected)." },
+    { "id": "e08", "source": "appController", "target": "storageManager", "label": "создаёт · accessChecked → handleCommonResult", "description": "Фасад владеет StorageManager; сигнал accessChecked обновляет storageAvailable и вызывает loadSettings." },
+    { "id": "e09", "source": "appController", "target": "networkManager", "label": "создаёт · connectivity/proxy signals", "description": "Фасад владеет NetworkManager; сигналы connectivityChecked / proxyChecked / proxyListChanged." },
+    { "id": "e10", "source": "appController", "target": "proxyListModel", "label": "Q_PROPERTY servers", "description": "QML берёт модель серверов через AppController.servers." },
+    { "id": "e11", "source": "appController", "target": "sourceLinkModel", "label": "Q_PROPERTY sourceLinksModel", "description": "QML берёт модель источников через AppController.sourceLinksModel." },
+    { "id": "e12", "source": "storageManager", "target": "settingsJson", "label": "read / write settings.json", "description": "loadSettings() → parseJson(); saveSettings() → QJsonDocument::toJson(Indented)." },
+    { "id": "e13", "source": "storageManager", "target": "sourceLinkModel", "label": "proxyLinksChanged → setFromList()", "description": "Список источников из настроек/дефолтов попадает в SourceLinkModel." },
+    { "id": "e14", "source": "networkManager", "target": "sourceLists", "label": "GET *.txt (UA · 5s timeout)", "description": "QNetworkAccessManager скачивает raw .txt список прокси (UA Chrome, transferTimeout 5000 мс)." },
+    { "id": "e15", "source": "networkManager", "target": "proxyResult", "label": "QtConcurrent::mapped → QFuture<ProxyResult>", "description": "Параллельная проверка: checkSingleProxy() в пуле потоков, результат — ProxyResult." },
+    { "id": "e16", "source": "networkManager", "target": "proxyListModel", "label": "proxyChecked → append()", "description": "Целевой маршрут: результат проверки попадает в ProxyListModel (onProxyChecked сейчас заглушка)." },
+    { "id": "e17", "source": "proxyListModel", "target": "genericListModel", "label": "extends", "description": "ProxyListModel наследует GenericListModel." },
+    { "id": "e18", "source": "sourceLinkModel", "target": "genericListModel", "label": "extends", "description": "SourceLinkModel наследует GenericListModel." },
+    { "id": "e19", "source": "proxyListModel", "target": "proxyResult", "label": "QList<ProxyResult> m_items", "description": "Элементы модели ProxyListModel — структуры ProxyResult." },
+    { "id": "e20", "source": "sourceLinkModel", "target": "proxySourceLink", "label": "QList<ProxySourceLink> m_items", "description": "Элементы модели SourceLinkModel — структуры ProxySourceLink." },
+    { "id": "e21", "source": "qmlMain", "target": "proxyListModel", "label": "ListView model=servers", "description": "ListView (Main.qml) связывает модель AppController.servers с делегатом MDelegate." }
+  ],
+  "flows": [
+    {
+      "id": "f01",
+      "name": "Запуск приложения",
+      "en": "Startup",
+      "description": "main.cpp создаёт QGuiApplication, загружает бэкенд QNetworkInformation, создаёт QQmlApplicationEngine и загружает Main.qml. Main.qml в Component.onCompleted вызывает AppController.initialize() → StorageManager.checkAccess() + NetworkManager.checkConnectivity().",
+      "steps": ["entry", "qmlMain", "appController", "storageManager", "appController", "networkManager"],
+      "path": ["e01", "e05", "e08", "e08", "e09"]
+    },
+    {
+      "id": "f02",
+      "name": "Загрузка настроек",
+      "en": "Settings load",
+      "description": "StorageManager.checkAccess() → accessChecked → AppController.handleCommonResult → loadSettings(). Читается settings.json (или setDefaults + saveSettings). proxyLinksChanged → SourceLinkModel.setFromList() → пункты меню источников в Main.qml.",
+      "steps": ["appController", "storageManager", "settingsJson", "storageManager", "sourceLinkModel", "qmlMain"],
+      "path": ["e08", "e12", "e12", "e12", "e13", "e07"]
+    },
+    {
+      "id": "f03",
+      "name": "Проверка сети",
+      "en": "Connectivity",
+      "description": "NetworkManager.checkConnectivity() → QNetworkInformation reachability → connectivityChecked(ok,msg) → AppController.handleCommonResult + internetAvailableChanged.",
+      "steps": ["networkManager", "appController", "qmlMain"],
+      "path": ["e09", "e05"]
+    },
+    {
+      "id": "f04",
+      "name": "Загрузка списка прокси",
+      "en": "Download sources",
+      "description": "AppController.refreshServerLists() → NetworkManager.refreshProxyLists(url) → GET raw .txt (UA Chrome, таймаут 5 с) → onReplyFinished: deduplicateProxyList → proxyListChanged(count). Далее запускается проверка (поток f05).",
+      "steps": ["appController", "networkManager", "sourceLists", "networkManager", "proxyListModel", "qmlMain"],
+      "path": ["e09", "e14", "e14", "e16", "e21"]
+    },
+    {
+      "id": "f05",
+      "name": "Проверка прокси (параллельно)",
+      "en": "Proxy check",
+      "description": "QtConcurrent::mapped по списку → checkSingleProxy() → QFuture<ProxyResult> → proxyChecked → ProxyListModel.append → ListView. Внимание: checkSingleProxy() и onProxyChecked() сейчас заглушки.",
+      "steps": ["networkManager", "proxyResult", "proxyListModel", "qmlMain", "qmlDelegate"],
+      "path": ["e15", "e19", "e21", "e04"]
+    },
+    {
+      "id": "f06",
+      "name": "Отображение и Share",
+      "en": "Display & share",
+      "description": "ListView показывает ProxyListModel через MDelegate: server, ping (зелёный <100 мс / красный), port. Кнопка Share → Qt.openUrlExternally('tg://proxy?server=…&port=…&secret=…').",
+      "steps": ["proxyListModel", "qmlMain", "qmlDelegate"],
+      "path": ["e21", "e04"]
+    },
+    {
+      "id": "f07",
+      "name": "Выбор источников (FAB-меню)",
+      "en": "Source menu",
+      "description": "FAB (cloud-refresh) → proxyMenu.open() → Instantiator model=AppController.sourceLinksModel → MenuItem (checkable, checked=selected). Выбранные источники — кандидаты для refreshServerLists().",
+      "steps": ["qmlMain", "appController", "sourceLinkModel"],
+      "path": ["e05", "e11"]
+    },
+    {
+      "id": "f08",
+      "name": "Смена темы",
+      "en": "Theme toggle",
+      "description": "Пункт меню → isDark = !isDark → Material.theme/background/primary/accent пересчитываются из MColors (Solarized dark/light).",
+      "steps": ["qmlMain", "qmlColors"],
+      "path": ["e02"]
+    },
+    {
+      "id": "f09",
+      "name": "Сохранение при паузе",
+      "en": "Save on suspend",
+      "description": "Qt.application.state == Suspended → AppController.saveSetting() → StorageManager.saveSettings() → запись settings.json (секции App + MTProxy, Indented).",
+      "steps": ["qmlMain", "appController", "storageManager", "settingsJson"],
+      "path": ["e05", "e08", "e12"]
+    },
+    {
+      "id": "f10",
+      "name": "Toast-уведомление",
+      "en": "Toast",
+      "description": "AppController.showToastMessage(msg) → Connections.onShowToastMessage → AndroidUtils.showToast(msg,false) → JNI Toast.makeText на main-потоке Android; на Desktop — qDebug.",
+      "steps": ["appController", "qmlMain", "androidUtils"],
+      "path": ["e05", "e06"]
+    }
+  ],
+  "audit": {
+    "stubs": [
+      "AppController::refreshServerLists() — только проверяет storageAvailable && internetAvailable",
+      "AppController::checkAllServers() / cancelCheck() — пустые",
+      "AppController::onProxyChecked() — пустой (ProxyListModel не заполняется результатами)",
+      "NetworkManager::checkSingleProxy() — заглушка, возвращает пустой ProxyResult"
+    ],
+    "notable_findings": [
+      "ProxyListModel никогда не наполняется (нет append из onProxyChecked), пока не реализован checkSingleProxy/onProxyChecked",
+      "networkmanager.cpp:223-224 — мёртвая ветка copy-paste в normalizeProxyKey (https://t.me)",
+      "initialize() вызывает refreshServerLists() преждевременно (до загрузки настроек)",
+      "AndroidUtils create() — thread-safety через QAtomicPointer без Mutex",
+      "Нет runtime-запроса Android-разрешений (BLUETOOTH_SCAN, ACCESS_COARSE_LOCATION) на API 31+",
+      "4 из 5 QML-компонентов (MButton, MCard, MListView, NavigationPane) не используются"
+    ]
+  }
+}

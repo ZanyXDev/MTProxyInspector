@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MTProxyInspector — Интерактивная архитектура</title>
+<!--
+  Интерактивная диаграмма архитектуры MTProxyInspector (Qt6 / C++17 / QML / Android).
+  Самодостаточный файл: без внешних зависимостей, вся модель данных внутри <script>.
+  Сгенерировано по результатам анализа репозитория. Синхронизировано с docs/architecture.json.
+-->
+<style>
+:root{
+  --bg:#002b36;          /* solarizedBase03 */
+  --bg2:#073642;         /* solarizedBase02 */
+  --bg3:#0b3a46;
+  --fg:#839496;          /* solarizedBase0  */
+  --fg-strong:#93a1a1;   /* solarizedBase1  */
+  --fg-muted:#657b83;    /* solarizedBase00 */
+  --border:#586e75;      /* solarizedBase01 */
+  --yellow:#b58900;
+  --orange:#cb4b16;
+  --red:#dc322f;
+  --magenta:#d33682;
+  --violet:#6c71c4;
+  --blue:#268bd2;
+  --cyan:#2aa198;
+  --green:#859900;
+  --shadow:0 10px 30px rgba(0,0,0,.45);
+  --radius:12px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--fg);
+  font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  min-height:100vh;
+}
+a{color:var(--cyan);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---------- Header ---------- */
+header{
+  padding:18px 22px 14px;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg, var(--bg2), var(--bg));
+  position:sticky;top:0;z-index:20;
+}
+header .row{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+h1{
+  margin:0;font-size:20px;font-weight:700;color:var(--fg-strong);
+  letter-spacing:.3px;
+}
+h1 .accent{color:var(--cyan)}
+.subtitle{margin:4px 0 0;font-size:12.5px;color:var(--fg-muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto}
+.chip{
+  font-size:11.5px;color:var(--fg-strong);background:var(--bg3);
+  border:1px solid var(--border);border-radius:999px;padding:4px 12px;
+  white-space:nowrap;
+}
+.chip b{color:var(--yellow);font-weight:700}
+
+/* ---------- Layout ---------- */
+.layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 330px;
+  gap:0;
+  align-items:start;
+}
+.diagram{min-width:0;padding:18px 18px 24px}
+.canvas-wrap{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  position:relative;
+  box-shadow:var(--shadow);
+}
+#svg{display:block;width:100%;height:auto}
+
+/* ---------- SVG elements ---------- */
+.edge{stroke:var(--border);stroke-width:1.6;fill:none;transition:stroke .18s,opacity .18s;cursor:pointer}
+.edge.dim{opacity:.18}
+.edge.active{stroke:var(--yellow);stroke-width:3}
+.edge .edge-dot{}
+.edge-label{
+  font-size:9px;fill:var(--fg-muted);paint-order:stroke;
+  stroke:var(--bg2);stroke-width:3;stroke-linejoin:round;
+  pointer-events:none;opacity:0;transition:opacity .18s;
+}
+.edge.active .edge-label{opacity:1;fill:var(--yellow);stroke:var(--bg2)}
+.edge.active + .edge-label{opacity:1}
+.edge-label.on{opacity:.85}
+.node{cursor:pointer}
+.node rect.node-box{
+  fill:var(--bg3);
+  stroke-width:1.5;
+  transition:fill .18s,stroke .18s,opacity .18s,filter .18s;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.35));
+}
+.node text.title{font-size:13px;font-weight:700;fill:var(--fg-strong)}
+.node text.sub{font-size:10px;fill:var(--fg-muted)}
+.node.dim{opacity:.25}
+.node.active rect.node-box{stroke-width:3}
+.node.active text.title{fill:var(--yellow)}
+.node:hover rect.node-box{stroke-width:3;filter:drop-shadow(0 0 8px rgba(181,137,0,.35))}
+.colhead{font-size:10px;fill:var(--fg-muted);letter-spacing:2px;text-transform:uppercase;opacity:.8}
+
+/* ---------- Flow bar ---------- */
+.flowbar{
+  margin-top:12px;min-height:38px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:8px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;
+}
+.flowbar.hidden{visibility:hidden}
+.flowbar .fb-title{font-size:11px;color:var(--fg-muted);text-transform:uppercase;letter-spacing:1px}
+.chipstep{
+  font-size:11.5px;background:var(--bg3);border:1px solid var(--border);
+  color:var(--fg-strong);border-radius:6px;padding:2px 9px;white-space:nowrap;
+}
+.chipstep.on{background:rgba(181,137,0,.16);border-color:var(--yellow);color:var(--yellow)}
+.arrowstep{color:var(--border);font-size:12px}
+
+/* ---------- Panel ---------- */
+.panel{
+  border-left:1px solid var(--border);
+  background:var(--bg);
+  padding:18px 18px 24px;
+  min-height:100%;
+  position:sticky;top:96px;max-height:calc(100vh - 120px);
+  overflow-y:auto;
+}
+.panel h2{
+  margin:0 0 4px;font-size:15px;color:var(--fg-strong);letter-spacing:.5px;
+  display:flex;align-items:center;gap:8px;
+}
+.panel h2 .cnt{
+  font-size:11px;color:var(--fg-muted);background:var(--bg3);
+  border:1px solid var(--border);border-radius:999px;padding:0 8px;
+}
+.panel p.hint{font-size:11.5px;color:var(--fg-muted);margin:0 0 12px}
+.legend{display:flex;flex-direction:column;gap:5px;margin-bottom:16px}
+.legend .lg-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--fg)}
+.lg-dot{width:12px;height:12px;border-radius:3px;flex:none}
+.legend + h2{margin-top:2px}
+
+.flows{list-style:none;margin:0 0 12px;padding:0;display:flex;flex-direction:column;gap:7px}
+.flow-item{
+  border:1px solid var(--border);border-radius:9px;
+  background:var(--bg2);padding:9px 11px;cursor:pointer;
+  transition:border-color .15s,background .15s,transform .1s;
+}
+.flow-item:hover{border-color:var(--blue);background:var(--bg3)}
+.flow-item.active{border-color:var(--yellow);background:rgba(181,137,0,.10)}
+.flow-item .f-name{font-size:13px;font-weight:600;color:var(--fg-strong)}
+.flow-item.active .f-name{color:var(--yellow)}
+.flow-item .f-meta{font-size:11px;color:var(--fg-muted);margin-top:2px}
+.flow-item .f-desc{
+  font-size:11.5px;color:var(--fg);margin-top:5px;line-height:1.45;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.flow-item.active .f-desc{-webkit-line-clamp:unset;overflow:visible}
+.f-num{
+  display:inline-block;font-size:10px;font-weight:700;color:var(--bg2);
+  background:var(--border);border-radius:4px;padding:0 6px;margin-right:7px;
+}
+.flow-item.active .f-num{background:var(--yellow)}
+
+.btn{
+  width:100%;padding:9px;font-size:12.5px;font-weight:600;cursor:pointer;
+  color:var(--fg-strong);background:var(--bg3);border:1px solid var(--border);
+  border-radius:9px;transition:all .15s;
+}
+.btn:hover{color:var(--yellow);border-color:var(--yellow)}
+.btn:disabled{opacity:.4;cursor:default}
+
+/* ---------- Details ---------- */
+.details{
+  margin-top:14px;border-top:1px solid var(--border);padding-top:12px;
+  display:none;
+}
+.details.show{display:block}
+.details .d-title{font-size:13px;font-weight:700;color:var(--yellow);margin-bottom:8px}
+.details .d-step{
+  display:flex;gap:9px;align-items:flex-start;margin-bottom:8px;
+}
+.details .d-idx{
+  flex:none;width:20px;height:20px;border-radius:50%;
+  background:var(--bg3);border:1px solid var(--border);
+  color:var(--fg-strong);font-size:10.5px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;margin-top:1px;
+}
+.details .d-node{font-size:12.5px;font-weight:600;color:var(--fg-strong)}
+.details .d-file{font-size:10.5px;color:var(--fg-muted);font-family:ui-monospace,Menlo,Consolas,monospace}
+.details .d-arr{font-size:10px;color:var(--border);margin-left:29px;margin-bottom:7px}
+.details .d-arr b{color:var(--cyan);font-weight:600}
+
+/* ---------- Tooltip ---------- */
+#tooltip{
+  position:fixed;z-index:50;max-width:340px;
+  background:#fdf6e3;color:#002b36;
+  border-radius:9px;padding:10px 12px;
+  box-shadow:0 12px 40px rgba(0,0,0,.55);
+  pointer-events:none;opacity:0;transform:translateY(4px);
+  transition:opacity .12s,transform .12s;
+}
+#tooltip.show{opacity:1;transform:translateY(0)}
+#tooltip .tt-title{font-size:13px;font-weight:700;margin-bottom:3px}
+#tooltip .tt-sub{font-size:11px;color:#586e75;margin-bottom:5px}
+#tooltip .tt-desc{font-size:11.5px;line-height:1.5;color:#073642}
+#tooltip .tt-file{font-size:10px;color:#657b83;font-family:ui-monospace,Menlo,Consolas,monospace;margin-top:5px;padding-top:5px;border-top:1px dashed #93a1a1}
+
+/* ---------- Footer ---------- */
+footer{
+  border-top:1px solid var(--border);padding:12px 22px;
+  font-size:11.5px;color:var(--fg-muted);display:flex;flex-wrap:wrap;gap:6px 20px;
+}
+footer b{color:var(--fg-strong)}
+.note{font-size:12px;color:var(--orange);margin-top:6px;line-height:1.5}
+
+/* ---------- Responsive ---------- */
+@media (max-width:980px){
+  .layout{grid-template-columns:1fr}
+  .panel{border-left:none;border-top:1px solid var(--border);position:static;max-height:none}
+  .panel{order:2}
+}
+@media (max-width:520px){
+  h1{font-size:17px}
+  header{padding:14px 14px 10px}
+  .chips{margin-left:0}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="row">
+    <div>
+      <h1>MTProxy <span class="accent">Inspector</span> — архитектура</h1>
+      <p class="subtitle">Мобильный тестер MTProxy-прокси для Telegram · Qt 6.11.1 · C++17 · QML · Android (отладка на Linux)</p>
+    </div>
+    <div class="chips">
+      <span class="chip">v<b id="st-ver">0.1.7</b></span>
+      <span class="chip">компонентов <b id="st-nodes">0</b></span>
+      <span class="chip">связей <b id="st-edges">0</b></span>
+      <span class="chip">потоков <b id="st-flows">0</b></span>
+    </div>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="diagram">
+    <div class="canvas-wrap">
+      <svg id="svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Диаграмма архитектуры MTProxyInspector">
+        <defs>
+          <marker id="arrDef" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#586e75"/>
+          </marker>
+          <marker id="arrAct" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#b58900"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+    <div class="flowbar hidden" id="flowbar"></div>
+  </section>
+
+  <aside class="panel">
+    <div class="legend" id="legend"></div>
+    <h2>Потоки данных <span class="cnt" id="flowCnt">0</span></h2>
+    <p class="hint">Выберите поток — маршрут подсветится на диаграмме. Клик по компоненту тоже выделяет поток.</p>
+    <ul class="flows" id="flowList"></ul>
+    <button class="btn" id="resetBtn" disabled>Сбросить выделение</button>
+    <div class="details" id="details"></div>
+  </aside>
+</main>
+
+<footer>
+  <span>Источник: <b>repo/MTProxyInspector</b> · ветка <b>models</b></span>
+  <span>Модель данных: <b>docs/architecture.json</b></span>
+  <span>Тема: <b>Solarized (соответствует MColors.qml)</b></span>
+</footer>
+<p class="note" style="padding:0 22px 16px">
+  Примечание: <code>AppController::onProxyChecked()</code>, <code>checkSingleProxy()</code>, <code>refreshServerLists()</code> — заглушки (бизнес-логика не реализована). Потоки 04–06 показывают целевую архитектуру.
+</p>
+
+<div id="tooltip" role="tooltip"></div>
+
+<script>
+/* =========================================================
+   МОДЕЛЬ АРХИТЕКТУРЫ — синхронизирована с architecture.json
+   ========================================================= */
+var GROUPS = {
+  entry:    { label: 'Запуск / Вход',   color: '#859900' },
+  qml:      { label: 'QML Frontend',    color: '#268bd2' },
+  cpp:      { label: 'C++ Backend',     color: '#6c71c4' },
+  data:     { label: 'Данные',          color: '#cb4b16' },
+  external: { label: 'Внешние',         color: '#d33682' },
+  platform: { label: 'Android',         color: '#2aa198' }
+};
+
+var COLUMNS = [
+  { key:'left',  x:60,  w:210, label:'Вход · Внешние' },
+  { key:'qml',   x:320, w:270, label:'QML Frontend'   },
+  { key:'cpp',   x:640, w:270, label:'C++ Backend'    },
+  { key:'data',  x:960, w:210, label:'Данные · Android' }
+];
+
+var NODES = [
+  { id:'entry', label:'main.cpp', sub:'точка входа · QGuiApplication',
+    group:'entry', file:'app/main.cpp', x:60,  y:40, w:210, h:64,
+    desc:'Создаёт QGuiApplication, загружает бэкенд QNetworkInformation (на Linux — "glib", на Android — default), создаёт QQmlApplicationEngine, передаёт в QML свойства isDebugMode / appVersion / buildQtVersion и загружает модуль io.github.zanyxdev.mtproxyinspector:Main.' },
+
+  { id:'settingsJson', label:'settings.json', sub:'AppDataLocation · QStandardPaths',
+    group:'external', file:'AppDataLocation/settings.json', x:60, y:180, w:210, h:64,
+    desc:'JSON-файл настроек в папке приложения. Секция "App": DarkMode, PingTest, MTProxyTest, EnableDebugLog. Секция "MTProxy": словарь title → {server, selected}. Сохраняется в Indented-формате.' },
+
+  { id:'sourceLists', label:'telegram-proxy-collector', sub:'raw .txt · tg://proxy?…',
+    group:'external', file:'github.com/kort0881/…', x:60, y:320, w:210, h:64,
+    desc:'Внешние источники списков прокси (raw .txt с GitHub). Строка вида tg://proxy?server=…&port=…&secret=… или tg://socks?… Дедуплицируются через normalizeProxyKey().' },
+
+  { id:'qmlMain', label:'Main.qml', sub:'ApplicationWindow · ListView · ToolBar · FAB · proxyMenu',
+    group:'qml', file:'app/qml/Main.qml', x:320, y:40, w:270, h:86,
+    desc:'Корневое окно. Header-ToolBar с меню (источники, настройки, тема, справка, о программе), ListView модели AppController.servers (делегат MDelegate), FAB (cloud-refresh) с меню источников через Instantiator + SourceLinkModel, footer с версией. Connections к AppController и Qt.application (сохранение при Suspended).' },
+
+  { id:'qmlDelegate', label:'MDelegate.qml', sub:'карточка: server · ping · port · share',
+    group:'qml', file:'app/qml/MDelegate.qml', x:320, y:180, w:270, h:64,
+    desc:'ItemDelegate-карточка прокси: server, ping (зелёный <100 мс, иначе красный), port, кнопка Share → Qt.openUrlExternally(tg://proxy?server=…&port=…&secret=…). Material.elevation + Ripple.' },
+
+  { id:'qmlColors', label:'MColors.qml', sub:'Singleton · Solarized',
+    group:'qml', file:'app/qml/MColors.qml', x:320, y:320, w:130, h:64,
+    desc:'QML_SINGLETON с Solarized-палитрой: Base03 #002b36, Base0 #839496, Cyan #2aa198, Green #859900, Red #dc322f и др. Используется для Material.theme и акцентов.' },
+
+  { id:'qmlFonts', label:'MFonts.qml', sub:'Singleton · FontLoader',
+    group:'qml', file:'app/qml/MFonts.qml', x:460, y:320, w:130, h:64,
+    desc:'QML_SINGLETON с FontLoader: Buira, Droidsansmono, 681-font (цифровой), nasalization-rg. Шрифты зашиты в ресурсы qrc:/qt/qml/assets/fonts.' },
+
+  { id:'appController', label:'AppController', sub:'Facade · QML_SINGLETON · владеет 4 модулями',
+    group:'cpp', file:'plugins/core/appcontroller.{h,cpp}', x:640, y:40, w:270, h:86,
+    desc:'Единый фасад для QML. Q_PROPERTY: servers, sourceLinksModel, storageAvailable, internetAvailable, checkProgress, checkTotal. Q_INVOKABLE: initialize(), refreshServerLists(), checkAllServers(), cancelCheck(), saveSetting(). Сигналы: showToastMessage, proxyListChanged, errorOccurred.' },
+
+  { id:'storageManager', label:'StorageManager', sub:'FS · settings.json · default links',
+    group:'cpp', file:'plugins/core/storagemanager.{h,cpp}', x:640, y:180, w:270, h:64,
+    desc:'Работа с файловой системой. checkAccess() проверяет запись в AppDataLocation, loadSettings()/saveSettings() работают с settings.json, при отсутствии файла — setDefaults() (5 дефолтных URL из kort0881/telegram-proxy-collector). Сигналы: accessChecked, appSettingsChanged, proxyLinksChanged, errorMessage.' },
+
+  { id:'networkManager', label:'NetworkManager', sub:'QNAM · QNetworkInformation · QtConcurrent',
+    group:'cpp', file:'plugins/core/networkmanager.{h,cpp}', x:640, y:320, w:270, h:64,
+    desc:'Сеть. QNetworkInformation → reachability (online/offline/local/site). Скачивание URL-листов через QNetworkAccessManager (UA Chrome, таймаут 5 с), onReplyFinished → deduplicateProxyList → параллельная проверка QtConcurrent::mapped. Сигналы: connectivityChecked, proxyChecked, proxyListChanged, loadingStatusChanged.' },
+
+  { id:'proxyListModel', label:'ProxyListModel', sub:'roles: ping · port · server · secret',
+    group:'cpp', file:'plugins/core/proxylistmodel.{h,cpp}', x:640, y:460, w:270, h:64,
+    desc:'Модель проверенных прокси (GenericListModel). append(ProxyResult), clear(), updateLatency(row,ping). Экспонирован в QML через QML_ELEMENT — используется как model у ListView.' },
+
+  { id:'sourceLinkModel', label:'SourceLinkModel', sub:'roles: title · server · selected',
+    group:'cpp', file:'plugins/core/sourcelinkmodel.{h,cpp}', x:960, y:180, w:210, h:64,
+    desc:'Модель ссылок-источников прокси (GenericListModel). setFromList(QVariantList) заполняется по сигналу proxyLinksChanged от StorageManager. Роли: title, server, selected. Используется в Instantiator меню источников.' },
+
+  { id:'genericListModel', label:'GenericListModel', sub:'Template Method · QAbstractListModel',
+    group:'cpp', file:'plugins/core/genericlistmodel.{h,cpp}', x:960, y:320, w:210, h:64,
+    desc:'Абстрактная база моделей: rowCount/data/roleNames делегируются в виртуальные do*() наследников. Q_DISABLE_COPY_MOVE. Наследники: ProxyListModel, SourceLinkModel.' },
+
+  { id:'proxyResult', label:'ProxyResult', sub:'Q_GADGET: ping·port·server·secret',
+    group:'data', file:'plugins/core/proxyresult.h', x:960, y:460, w:210, h:64,
+    desc:'Q_GADGET-структура результата проверки прокси: int ping, int port, QString server, QString secret. Q_DECLARE_METATYPE — передаётся в cross-thread сигналах (QtConcurrent → main thread).' },
+
+  { id:'proxySourceLink', label:'ProxySourceLink', sub:'struct: title·server·selected',
+    group:'data', file:'plugins/core/proxysourcelink.h', x:960, y:600, w:210, h:64,
+    desc:'Простая структура элемента источника прокси: title (имя), server (URL), bool selected. Хранится в QList<ProxySourceLink> внутри SourceLinkModel.' },
+
+  { id:'androidUtils', label:'AndroidUtils', sub:'QML_SINGLETON · Toast via JNI',
+    group:'platform', file:'plugins/androidutils/androidutils.{h,cpp}', x:960, y:40, w:210, h:64,
+    desc:'Мобильный хелпер. showToast(message, isLong) вызывает Toast.makeText через QJniObject на main-потоке Android; на Desktop — эмуляция через qDebug. Синглтон реализован через QAtomicPointer + приватный конструктор.' }
+];
+
+var EDGES = [
+  { id:'e01', s:'entry', t:'qmlMain', label:"loadFromModule('Main')",
+    desc:'main.cpp загружает QML-модуль io.github.zanyxdev.mtproxyinspector:Main.' },
+  { id:'e02', s:'qmlMain', t:'qmlColors', label:'Material.primary / accent',
+    desc:'Main.qml берёт Solarized-цвета из MColors для Material.theme.' },
+  { id:'e03', s:'qmlMain', t:'qmlFonts', label:'font.family: MFonts.*',
+    desc:'Main.qml и MDelegate используют шрифты из синглтона MFonts.' },
+  { id:'e04', s:'qmlMain', t:'qmlDelegate', label:'ListView delegate',
+    desc:'ListView отрисовывает каждый прокси через MDelegate.' },
+  { id:'e05', s:'qmlMain', t:'appController', label:'initialize() · saveSetting() · Connections',
+    desc:'QML вызывает методы фасада и ловит сигналы (proxyListChanged, showToastMessage).' },
+  { id:'e06', s:'qmlMain', t:'androidUtils', label:'Connections → showToast()',
+    desc:'onShowToastMessage → AndroidUtils.showToast(message, false).' },
+  { id:'e07', s:'qmlMain', t:'sourceLinkModel', label:'proxyMenu: Instantiator model=sourceLinksModel',
+    desc:'FAB открывает меню, пункты которого строятся из SourceLinkModel (AppController.sourceLinksModel).' },
+  { id:'e08', s:'appController', t:'storageManager', label:'создаёт · accessChecked → handleCommonResult',
+    desc:'Фасад владеет StorageManager; сигнал accessChecked обновляет storageAvailable.' },
+  { id:'e09', s:'appController', t:'networkManager', label:'создаёт · connectivity/proxy signals',
+    desc:'Фасад владеет NetworkManager; сигналы connectivityChecked / proxyChecked / proxyListChanged.' },
+  { id:'e10', s:'appController', t:'proxyListModel', label:'Q_PROPERTY servers',
+    desc:'QML берёт модель серверов через AppController.servers.' },
+  { id:'e11', s:'appController', t:'sourceLinkModel', label:'Q_PROPERTY sourceLinksModel',
+    desc:'QML берёт модель источников через AppController.sourceLinksModel.' },
+  { id:'e12', s:'storageManager', t:'settingsJson', label:'read / write settings.json',
+    desc:'loadSettings() → parseJson(); saveSettings() → QJsonDocument::toJson(Indented).' },
+  { id:'e13', s:'storageManager', t:'sourceLinkModel', label:'proxyLinksChanged → setFromList()',
+    desc:'Список источников из настроек/дефолтов попадает в SourceLinkModel.' },
+  { id:'e14', s:'networkManager', t:'sourceLists', label:'GET *.txt (UA · 5s timeout)',
+    desc:'QNetworkAccessManager скачивает raw .txt список прокси.' },
+  { id:'e15', s:'networkManager', t:'proxyResult', label:'QtConcurrent::mapped → QFuture<ProxyResult>',
+    desc:'Параллельная проверка: checkSingleProxy() в пуле потоков, результат — ProxyResult.' },
+  { id:'e16', s:'networkManager', t:'proxyListModel', label:'proxyChecked → append()',
+    desc:'Целевой маршрут: результат проверки попадает в ProxyListModel (onProxyChecked — заглушка).' },
+  { id:'e17', s:'proxyListModel', t:'genericListModel', label:'extends',
+    desc:'ProxyListModel наследует GenericListModel.' },
+  { id:'e18', s:'sourceLinkModel', t:'genericListModel', label:'extends',
+    desc:'SourceLinkModel наследует GenericListModel.' },
+  { id:'e19', s:'proxyListModel', t:'proxyResult', label:'QList<ProxyResult> m_items',
+    desc:'Элементы модели ProxyListModel — структуры ProxyResult.' },
+  { id:'e20', s:'sourceLinkModel', t:'proxySourceLink', label:'QList<ProxySourceLink> m_items',
+    desc:'Элементы модели SourceLinkModel — структуры ProxySourceLink.' },
+  { id:'e21', s:'qmlMain', t:'proxyListModel', label:'ListView model=servers',
+    desc:'ListView (Main.qml) связывает модель AppController.servers с делегатом MDelegate.' }
+];
+
+var FLOWS = [
+  { id:'f01', name:'Запуск приложения', en:'Startup',
+    desc:'main.cpp создаёт QGuiApplication, загружает бэкенд QNetworkInformation, создаёт QQmlApplicationEngine и загружает Main.qml. Main.qml в Component.onCompleted вызывает AppController.initialize() → StorageManager.checkAccess() + NetworkManager.checkConnectivity() (параллельно через фасад).',
+    steps:['entry','qmlMain','appController','storageManager','appController','networkManager'] },
+  { id:'f02', name:'Загрузка настроек', en:'Settings load',
+    desc:'StorageManager.checkAccess() → accessChecked → AppController.handleCommonResult → loadSettings(). Читается settings.json (или setDefaults + saveSettings). proxyLinksChanged → SourceLinkModel.setFromList() → пункты меню источников в Main.qml.',
+    steps:['appController','storageManager','settingsJson','storageManager','sourceLinkModel','qmlMain'] },
+  { id:'f03', name:'Проверка сети', en:'Connectivity',
+    desc:'NetworkManager.checkConnectivity() → QNetworkInformation reachability (online/offline/local/site) → connectivityChecked(ok,msg) → AppController.handleCommonResult + internetAvailableChanged.',
+    steps:['networkManager','appController','qmlMain'] },
+  { id:'f04', name:'Загрузка списка прокси', en:'Download sources',
+    desc:'AppController.refreshServerLists() → NetworkManager.refreshProxyLists(url) → GET raw .txt (UA Chrome, таймаут 5 с) → onReplyFinished: deduplicateProxyList → proxyListChanged(count). Далее запускается проверка (поток 05).',
+    steps:['appController','networkManager','sourceLists','networkManager','proxyListModel','qmlMain'] },
+  { id:'f05', name:'Проверка прокси (параллельно)', en:'Proxy check',
+    desc:'QtConcurrent::mapped по списку → checkSingleProxy() → QFuture<ProxyResult> → proxyChecked → ProxyListModel.append → ListView. Внимание: checkSingleProxy() и onProxyChecked() сейчас заглушки.',
+    steps:['networkManager','proxyResult','proxyListModel','qmlMain','qmlDelegate'] },
+  { id:'f06', name:'Отображение и Share', en:'Display & share',
+    desc:'ListView показывает ProxyListModel через MDelegate: server, ping (зелёный <100 мс / красный), port. Кнопка Share → Qt.openUrlExternally("tg://proxy?server=…&port=…&secret=…").',
+    steps:['proxyListModel','qmlMain','qmlDelegate'] },
+  { id:'f07', name:'Выбор источников (FAB-меню)', en:'Source menu',
+    desc:'FAB (cloud-refresh) → proxyMenu.open() → Instantiator model=AppController.sourceLinksModel → MenuItem (checkable, checked=selected). Выбранные источники — кандидаты для refreshServerLists().',
+    steps:['qmlMain','appController','sourceLinkModel'] },
+  { id:'f08', name:'Смена темы', en:'Theme toggle',
+    desc:'Пункт меню → isDark = !isDark → Material.theme/background/primary/accent пересчитываются из MColors (Solarized dark/light).',
+    steps:['qmlMain','qmlColors'] },
+  { id:'f09', name:'Сохранение при паузе', en:'Save on suspend',
+    desc:'Qt.application.state == Suspended → AppController.saveSetting() → StorageManager.saveSettings() → запись settings.json (секции App + MTProxy, Indented).',
+    steps:['qmlMain','appController','storageManager','settingsJson'] },
+  { id:'f10', name:'Toast-уведомление', en:'Toast',
+    desc:'AppController.showToastMessage(msg) → Connections.onShowToastMessage → AndroidUtils.showToast(msg,false) → JNI Toast.makeText на main-потоке Android; на Desktop — qDebug.',
+    steps:['appController','qmlMain','androidUtils'] }
+];
+
+/* =========================================================
+   РЕНДЕР
+   ========================================================= */
+var svg, NS='http://www.w3.org/2000/svg';
+var nodeById = {}, edgeById = {};
+var selectedFlow = null;
+var tooltipEl;
+
+function nodeCenter(n){ return [n.x + n.w/2, n.y + n.h/2]; }
+
+/* Точка на границе прямоугольника в направлении (tx,ty) */
+function rectEdgePoint(n, tx, ty){
+  var cx = n.x + n.w/2, cy = n.y + n.h/2;
+  var dx = tx - cx, dy = ty - cy;
+  var sx = (n.w/2) / (Math.abs(dx) || 1e-6);
+  var sy = (n.h/2) / (Math.abs(dy) || 1e-6);
+  var s = Math.min(sx, sy);
+  return [cx + dx*s, cy + dy*s];
+}
+
+function edgePath(a, b, curve){
+  var ca = nodeCenter(a), cb = nodeCenter(b);
+  var p1 = rectEdgePoint(a, cb[0], cb[1]);
+  var p2 = rectEdgePoint(b, ca[0], ca[1]);
+  var mx = (p1[0]+p2[0])/2, my = (p1[1]+p2[1])/2;
+  var dx = p2[0]-p1[0], dy = p2[1]-p1[1];
+  var len = Math.hypot(dx, dy) || 1;
+  var off = curve || 26;
+  var ox = -dy/len*off, oy = dx/len*off;
+  var cxp = mx+ox, cyp = my+oy;
+  return { d: 'M'+p1[0]+','+p1[1]+' Q'+cxp+','+cyp+' '+p2[0]+','+p2[1], p1:p1, p2:p2, mid:[cxp,cyp] };
+}
+
+function el(tag, attrs, text){
+  var e = document.createElementNS(NS, tag);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function render(){
+  svg = document.getElementById('svg');
+  tooltipEl = document.getElementById('tooltip');
+  var i;
+
+  /* --- заголовки колонок --- */
+  COLUMNS.forEach(function(c){
+    var t = el('text', { x:c.x, y:22, class:'colhead' }, c.label);
+    svg.appendChild(t);
+  });
+
+  /* --- рёбра (под узлами) --- */
+  var edgeGroup = el('g', {});
+  EDGES.forEach(function(e){
+    var a = nodeById[e.s] || byId(e.s), b = nodeById[e.t] || byId(e.t);
+    var path = edgePath(a, b, 26);
+    var p = el('path', { class:'edge', d:path.d, markerEnd:'url(#arrDef)', 'data-id':e.id });
+    var lbl = el('text', { class:'edge-label', x:path.mid[0], y:path.mid[1]-6, 'text-anchor':'middle', 'data-for':e.id }, e.label);
+    edgeGroup.appendChild(p); edgeGroup.appendChild(lbl);
+    e._path = path;
+  });
+  svg.appendChild(edgeGroup);
+
+  /* --- узлы --- */
+  NODES.forEach(function(n){
+    nodeById[n.id] = n;
+    var g = el('g', { class:'node', 'data-id':n.id });
+    var box = el('rect', { class:'node-box', x:n.x, y:n.y, width:n.w, height:n.h, rx:10, ry:10, stroke:GROUPS[n.group].color, fill:'#0b3a46' });
+    g.appendChild(box);
+    var cy = n.y + n.h/2;
+    var t1 = el('text', { class:'title', x:n.x+n.w/2, y:cy-1, 'text-anchor':'middle' }, n.label);
+    var t2 = el('text', { class:'sub', x:n.x+n.w/2, y:cy+13, 'text-anchor':'middle' }, n.sub);
+    g.appendChild(t1); g.appendChild(t2);
+    svg.appendChild(g);
+  });
+
+  /* --- легенда --- */
+  var legend = document.getElementById('legend');
+  for (var key in GROUPS){
+    var item = document.createElement('div');
+    item.className = 'lg-item';
+    item.innerHTML = '<span class="lg-dot" style="background:'+GROUPS[key].color+'"></span>'+GROUPS[key].label;
+    legend.appendChild(item);
+  }
+
+  /* --- статистика --- */
+  document.getElementById('st-nodes').textContent = NODES.length;
+  document.getElementById('st-edges').textContent = EDGES.length;
+  document.getElementById('st-flows').textContent = FLOWS.length;
+  document.getElementById('flowCnt').textContent = FLOWS.length;
+
+  /* --- список потоков --- */
+  var flowList = document.getElementById('flowList');
+  FLOWS.forEach(function(f, idx){
+    var li = document.createElement('li');
+    li.className = 'flow-item';
+    li.setAttribute('data-flow', f.id);
+    li.innerHTML =
+      '<div class="f-name"><span class="f-num">'+(idx+1)+'</span>'+f.name+' <span style="color:var(--fg-muted);font-weight:400;font-size:10.5px">('+f.en+')</span></div>'+
+      '<div class="f-meta">'+f.steps.length+' шаг(ов) · '+flowPathOf(f).length+' связей</div>'+
+      '<div class="f-desc">'+f.desc+'</div>';
+    flowList.appendChild(li);
+  });
+
+  bindInteractions();
+  renderBands();
+}
+
+/* Подсветка «полос» QML / C++ на фоне диаграммы */
+function renderBands(){
+  var band = el('g', {});
+  var specs = [
+    { x:315, y:0, w:280, h:800, color:'#268bd2', label:'QML' },
+    { x:635, y:0, w:280, h:800, color:'#6c71c4', label:'C++' }
+  ];
+  specs.forEach(function(b){
+    band.appendChild(el('rect', { x:b.x, y:b.y, width:b.w, height:b.h, fill:b.color, opacity:0.045, rx:0 }));
+  });
+  var first = svg.firstChild;
+  svg.insertBefore(band, first);
+}
+
+/* Путь потока: рёбра между соседними шагами (обе стороны) */
+function flowPathOf(f){
+  var ids = [], used = {};
+  for (var i = 0; i < f.steps.length-1; i++){
+    var a = f.steps[i], b = f.steps[i+1];
+    var found = null;
+    EDGES.forEach(function(e){
+      if ((e.s === a && e.t === b) || (e.s === b && e.t === a)) found = e;
+    });
+    if (found) ids.push(found.id);
+  }
+  return ids;
+}
+
+/* =========================================================
+   ВЗАИМОДЕЙСТВИЕ
+   ========================================================= */
+function bindInteractions(){
+  var self = this;
+
+  /* hover-тултипы на узлах */
+  document.querySelectorAll('.node').forEach(function(g){
+    var id = g.getAttribute('data-id');
+    g.addEventListener('mousemove', function(ev){ showTooltip(ev, nodeById[id]); });
+    g.addEventListener('mouseleave', hideTooltip);
+    g.addEventListener('click', function(){
+      var f = firstFlowThrough(id);
+      if (f) selectFlow(f.id);
+      else if (selectedFlow) showTooltipFromNode(id);
+    });
+  });
+
+  /* hover-тултипы на рёбрах + клик выделяет поток */
+  document.querySelectorAll('.edge').forEach(function(p){
+    var id = p.getAttribute('data-id');
+    p.addEventListener('mousemove', function(ev){ showTooltip(ev, edgeById[id] || byEdge(id)); });
+    p.addEventListener('mouseleave', hideTooltip);
+    p.addEventListener('click', function(){
+      var f = firstFlowThroughEdge(id);
+      if (f) selectFlow(f.id);
+    });
+  });
+
+  /* список потоков */
+  document.querySelectorAll('.flow-item').forEach(function(li){
+    li.addEventListener('click', function(){
+      var fid = li.getAttribute('data-flow');
+      if (selectedFlow === fid) selectFlow(null);
+      else selectFlow(fid);
+    });
+  });
+
+  /* сброс */
+  var reset = document.getElementById('resetBtn');
+  reset.addEventListener('click', function(){ selectFlow(null); });
+}
+
+function byId(id){
+  for (var i=0;i<NODES.length;i++) if (NODES[i].id===id) return NODES[i];
+  return null;
+}
+function byEdge(id){
+  for (var i=0;i<EDGES.length;i++) if (EDGES[i].id===id) return EDGES[i];
+  return null;
+}
+function firstFlowThrough(nodeId){
+  for (var i=0;i<FLOWS.length;i++) if (FLOWS[i].steps.indexOf(nodeId) >= 0) return FLOWS[i];
+  return null;
+}
+function firstFlowThroughEdge(edgeId){
+  for (var i=0;i<FLOWS.length;i++) if (flowPathOf(FLOWS[i]).indexOf(edgeId) >= 0) return FLOWS[i];
+  return null;
+}
+
+function selectFlow(fid){
+  var allNodes = document.querySelectorAll('.node');
+  var allEdges = document.querySelectorAll('.edge');
+  var allLabels = document.querySelectorAll('.edge-label');
+  var flowItems = document.querySelectorAll('.flow-item');
+
+  /* очистка */
+  allNodes.forEach(function(g){ g.classList.remove('active','dim'); });
+  allEdges.forEach(function(p){ p.classList.remove('active','dim'); p.setAttribute('marker-end','url(#arrDef)'); });
+  allLabels.forEach(function(l){ l.classList.remove('on'); });
+  flowItems.forEach(function(li){ li.classList.remove('active'); });
+  document.getElementById('flowbar').classList.add('hidden');
+  document.getElementById('details').classList.remove('show');
+  document.getElementById('resetBtn').disabled = true;
+  selectedFlow = null;
+
+  if (!fid) return;
+
+  var f = null;
+  for (var i=0;i<FLOWS.length;i++) if (FLOWS[i].id===fid) f = FLOWS[i];
+  if (!f) return;
+
+  var edgeIds = flowPathOf(f);
+  selectedFlow = f.id;
+
+  /* затемняем всё, кроме маршрута */
+  allNodes.forEach(function(g){
+    var active = f.steps.indexOf(g.getAttribute('data-id')) >= 0;
+    if (active) g.classList.add('active'); else g.classList.add('dim');
+  });
+  allEdges.forEach(function(p){
+    var active = edgeIds.indexOf(p.getAttribute('data-id')) >= 0;
+    if (active){ p.classList.add('active'); p.setAttribute('marker-end','url(#arrAct)'); }
+    else p.classList.add('dim');
+  });
+  allLabels.forEach(function(l){
+    if (edgeIds.indexOf(l.getAttribute('data-for')) >= 0) l.classList.add('on');
+  });
+
+  /* активируем пункт в списке */
+  flowItems.forEach(function(li){
+    if (li.getAttribute('data-flow') === f.id) li.classList.add('active');
+  });
+
+  renderFlowBar(f);
+  renderDetails(f);
+  document.getElementById('resetBtn').disabled = false;
+}
+
+function renderFlowBar(f){
+  var bar = document.getElementById('flowbar');
+  bar.innerHTML = '';
+  bar.classList.remove('hidden');
+  bar.appendChild(el('span', { class:'fb-title' }, 'Маршрут: '));
+  f.steps.forEach(function(sid, i){
+    var n = byId(sid);
+    if (i) bar.appendChild(el('span', { class:'arrowstep' }, '→'));
+    var chip = el('span', { class:'chipstep on' }, n.label);
+    bar.appendChild(chip);
+  });
+}
+
+function renderDetails(f){
+  var d = document.getElementById('details');
+  d.innerHTML = '';
+  d.classList.add('show');
+  var title = document.createElement('div');
+  title.className = 'd-title';
+  title.textContent = 'Поток: ' + f.name + ' (' + f.en + ')';
+  d.appendChild(title);
+
+  f.steps.forEach(function(sid, i){
+    var n = byId(sid);
+    var step = document.createElement('div');
+    step.className = 'd-step';
+    step.innerHTML =
+      '<span class="d-idx">'+(i+1)+'</span>'+
+      '<div><div class="d-node">'+n.label+'</div>'+
+      '<div class="d-file">'+n.file+'</div></div>';
+    d.appendChild(step);
+    if (i < f.steps.length-1){
+      var a = f.steps[i], b = f.steps[i+1];
+      var edge = null;
+      EDGES.forEach(function(e){ if ((e.s===a&&e.t===b)||(e.s===b&&e.t===a)) edge = e; });
+      var arr = document.createElement('div');
+      arr.className = 'd-arr';
+      arr.innerHTML = '↳ <b>'+(edge ? edge.label : '—')+'</b>';
+      d.appendChild(arr);
+    }
+  });
+}
+
+/* ---------- tooltip ---------- */
+function showTooltip(ev, data){
+  if (!data) return;
+  tooltipEl.innerHTML =
+    '<div class="tt-title" style="color:#268bd2">'+data.label+'</div>'+
+    (data.sub ? '<div class="tt-sub">'+data.sub+'</div>' : '')+
+    (data.desc ? '<div class="tt-desc">'+data.desc+'</div>' : '')+
+    (data.file ? '<div class="tt-file">'+data.file+'</div>' : '');
+  tooltipEl.classList.add('show');
+  var w = tooltipEl.offsetWidth, h = tooltipEl.offsetHeight;
+  var pad = 14;
+  var x = ev.clientX + pad, y = ev.clientY + pad;
+  if (x + w > window.innerWidth - 8) x = ev.clientX - w - pad;
+  if (y + h > window.innerHeight - 8) y = ev.clientY - h - pad;
+  tooltipEl.style.left = Math.max(8, x) + 'px';
+  tooltipEl.style.top  = Math.max(8, y) + 'px';
+}
+function hideTooltip(){ tooltipEl.classList.remove('show'); }
+
+document.addEventListener('DOMContentLoaded', function(){
+  /* ребра: ссылки на объекты для тултипов */
+  EDGES.forEach(function(e){ edgeById[e.id] = e; });
+  render();
+});
+</script>
+</body>
+</html>
